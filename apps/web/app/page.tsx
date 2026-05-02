@@ -20,15 +20,9 @@ export default function Home() {
           <div className="flex items-center gap-4">
             <Link 
               href="/login" 
-              className="px-5 py-2 text-sm font-medium text-slate-300 hover:text-white transition-colors"
+              className="px-6 py-2 text-sm font-bold bg-blue-600 hover:bg-blue-500 rounded-full transition-all shadow-lg shadow-blue-600/20 active:scale-95"
             >
-              Login
-            </Link>
-            <Link 
-              href="/register" 
-              className="px-5 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-500 rounded-full transition-all shadow-lg shadow-blue-600/20 active:scale-95"
-            >
-              Get Started
+              Access Portal
             </Link>
           </div>
         </div>
@@ -53,10 +47,10 @@ export default function Home() {
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-24">
           <Link 
-            href="/register" 
+            href="/login" 
             className="w-full sm:w-auto px-8 py-4 bg-white text-slate-950 font-bold rounded-xl hover:bg-slate-200 transition-all shadow-xl shadow-white/10 active:scale-95"
           >
-            I'm a Student
+            Student Login
           </Link>
           <Link 
             href="/login" 

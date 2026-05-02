@@ -103,14 +103,6 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="mt-8 pt-8 border-t border-white/5 text-center">
-            <p className="text-slate-400 text-sm">
-              Don't have an account?{' '}
-              <Link href="/register" className="text-blue-500 font-bold hover:underline underline-offset-4">
-                Register now
-              </Link>
-            </p>
-          </div>
         </div>
       </div>
     </div>

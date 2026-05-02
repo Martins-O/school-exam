@@ -57,6 +57,7 @@ export default function AdminDashboardPage() {
           <div className="flex items-center gap-8">
             <Link href="/admin/exams" className="text-sm font-medium text-slate-400 hover:text-white transition-colors">Exams</Link>
             <Link href="/admin/results" className="text-sm font-medium text-slate-400 hover:text-white transition-colors">Results</Link>
+            <Link href="/admin/users" className="text-sm font-medium text-slate-400 hover:text-white transition-colors">Users</Link>
             <button 
               onClick={handleLogout}
               className="text-sm font-bold text-red-400 hover:text-red-300 transition-colors"
@@ -108,7 +109,7 @@ export default function AdminDashboardPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <button
             onClick={() => router.push('/admin/exams')}
             className="group glass-card p-8 text-left hover:bg-white/[0.07] transition-all hover:-translate-y-1"
@@ -138,6 +139,22 @@ export default function AdminDashboardPage() {
             </p>
             <div className="inline-flex items-center gap-2 text-purple-400 text-sm font-bold">
               VIEW ANALYTICS DASHBOARD <span className="text-lg">→</span>
+            </div>
+          </button>
+
+          <button
+            onClick={() => router.push('/admin/users')}
+            className="group glass-card p-8 text-left hover:bg-white/[0.07] transition-all hover:-translate-y-1"
+          >
+            <div className="w-14 h-14 bg-emerald-600/20 rounded-2xl flex items-center justify-center text-3xl mb-6 text-emerald-500 group-hover:scale-110 transition-transform">
+              👥
+            </div>
+            <h3 className="text-2xl font-bold mb-3">User Directory</h3>
+            <p className="text-slate-400 text-sm leading-relaxed mb-8">
+              Manage student enrollments and instructor credentials. Invite new users and control platform access.
+            </p>
+            <div className="inline-flex items-center gap-2 text-emerald-400 text-sm font-bold">
+              MANAGE USER ACCOUNTS <span className="text-lg">→</span>
             </div>
           </button>
         </div>

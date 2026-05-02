@@ -4,6 +4,7 @@ interface QuestionCardProps {
     questionText: string;
     options: Record<string, string>;
     marks: number;
+    image?: string;
   };
   selectedAnswer: string | null;
   onAnswer: (answer: string) => void;
@@ -15,45 +16,45 @@ export default function QuestionCard({
   question,
   selectedAnswer,
   onAnswer,
-  isFlagged,
-  onToggleFlag,
 }: QuestionCardProps) {
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md">
-      <div className="flex justify-between items-start mb-4">
-        <h3 className="text-lg font-semibold">
+    <div className="glass-card p-10 rounded-[2.5rem]">
+      <div className="mb-10">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="px-3 py-1 bg-blue-600/20 text-blue-400 rounded-full text-[10px] font-black uppercase tracking-widest">
+            {question.marks} POINT{question.marks !== 1 ? 'S' : ''}
+          </div>
+        </div>
+        <h2 className="text-2xl md:text-3xl font-extrabold leading-tight text-white">
           {question.questionText}
-          <span className="ml-2 text-sm text-gray-500">(Marks: {question.marks})</span>
-        </h3>
-        <button
-          onClick={onToggleFlag}
-          className={`px-3 py-1 rounded-md text-sm ${
-            isFlagged ? 'bg-yellow-200 text-yellow-800' : 'bg-gray-100 text-gray-600'
-          }`}
-        >
-          {isFlagged ? 'Flagged' : 'Flag for review'}
-        </button>
+        </h2>
       </div>
 
-      <div className="space-y-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {Object.entries(question.options).map(([key, value]) => (
-          <label
+          <button
             key={key}
-            className={`flex items-center p-3 border rounded-md cursor-pointer hover:bg-gray-50 ${
-              selectedAnswer === key ? 'border-blue-500 bg-blue-50' : 'border-gray-300'
+            onClick={() => onAnswer(key)}
+            className={`flex items-center gap-4 p-6 rounded-3xl border-2 text-left transition-all group ${
+              selectedAnswer === key 
+              ? 'border-blue-600 bg-blue-600/10 text-white shadow-lg shadow-blue-600/10' 
+              : 'border-white/5 bg-white/5 text-slate-400 hover:border-white/20 hover:bg-white/10 hover:text-white'
             }`}
           >
-            <input
-              type="radio"
-              name={question.id}
-              value={key}
-              checked={selectedAnswer === key}
-              onChange={() => onAnswer(key)}
-              className="mr-3"
-            />
-            <span className="font-medium mr-2">{key})</span>
-            <span>{value}</span>
-          </label>
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm flex-shrink-0 transition-colors ${
+              selectedAnswer === key 
+              ? 'bg-blue-600 text-white' 
+              : 'bg-white/5 text-slate-500 group-hover:bg-white/20 group-hover:text-white'
+            }`}>
+              {key}
+            </div>
+            <span className="font-semibold text-lg">{value}</span>
+            {selectedAnswer === key && (
+              <div className="ml-auto w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-white text-[10px] animate-in zoom-in duration-300">
+                ✓
+              </div>
+            )}
+          </button>
         ))}
       </div>
     </div>

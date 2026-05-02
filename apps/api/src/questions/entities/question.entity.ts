@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
-import { Exclude } from 'class-transformer';
+import { Exclude, Expose } from 'class-transformer';
 import { Exam } from '../../exams/entities/exam.entity';
 
 @Entity('questions')
@@ -19,6 +19,7 @@ export class Question {
 
   @Column({ type: 'char', length: 1 })
   @Exclude()
+  @Expose({ groups: ['admin'] })
   correctAnswer: string;
 
   @Column({ type: 'int', default: 1 })

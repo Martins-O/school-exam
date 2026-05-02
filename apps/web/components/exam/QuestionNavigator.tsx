@@ -14,42 +14,58 @@ export default function QuestionNavigator({
   onNavigate,
 }: QuestionNavigatorProps) {
   return (
-    <div className="bg-white p-4 rounded-lg shadow-md">
-      <h4 className="font-semibold mb-3">Question Navigator</h4>
+    <div>
       <div className="grid grid-cols-5 gap-2">
         {questions.map((q, idx) => {
           const isAnswered = !!answers[q.id];
           const isFlagged = flaggedQuestions.includes(q.id);
           const isCurrent = idx === currentIndex;
 
-          let bgColor = 'bg-gray-200';
-          if (isCurrent) bgColor = 'bg-blue-500 text-white';
-          else if (isFlagged) bgColor = 'bg-yellow-300';
-          else if (isAnswered) bgColor = 'bg-green-300';
+          let stateStyles = 'bg-white/5 border-white/10 text-slate-500 hover:bg-white/10 hover:text-white';
+          if (isCurrent) {
+            stateStyles = 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-600/20';
+          } else if (isFlagged) {
+            stateStyles = 'bg-yellow-500/20 border-yellow-500/30 text-yellow-500';
+          } else if (isAnswered) {
+            stateStyles = 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400';
+          }
 
           return (
             <button
               key={q.id}
               onClick={() => onNavigate(idx)}
-              className={`w-10 h-10 rounded-md text-sm font-medium ${bgColor}`}
+              className={`relative w-full aspect-square rounded-xl text-xs font-black border transition-all active:scale-90 ${stateStyles}`}
             >
               {idx + 1}
+              {isAnswered && !isCurrent && (
+                <div className="absolute -top-1 -right-1 w-2 h-2 bg-emerald-500 rounded-full shadow-sm"></div>
+              )}
             </button>
           );
         })}
       </div>
-      <div className="mt-4 space-y-1 text-sm text-gray-600">
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-green-300 rounded"></div>
-          <span>Answered</span>
+      
+      <div className="mt-8 space-y-3">
+        <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest">
+          <span className="text-slate-500">Status Legend</span>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-yellow-300 rounded"></div>
-          <span>Flagged</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-gray-200 rounded"></div>
-          <span>Unanswered</span>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="flex items-center gap-2 text-[10px] font-bold text-emerald-500/80">
+            <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+            ANSWERED
+          </div>
+          <div className="flex items-center gap-2 text-[10px] font-bold text-yellow-500/80">
+            <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+            FLAGGED
+          </div>
+          <div className="flex items-center gap-2 text-[10px] font-bold text-blue-500/80">
+            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+            ACTIVE
+          </div>
+          <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500">
+            <div className="w-2 h-2 bg-slate-700 rounded-full"></div>
+            REMAINING
+          </div>
         </div>
       </div>
     </div>

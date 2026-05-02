@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Submission } from './entities/submission.entity';
 import { ExamSessionService } from './exam-session.service';
+import { GraderService } from './grader.service';
 import { RandomizerService } from './randomizer.service';
 import { SubmissionsController } from './submissions.controller';
 import { SessionCleanupTask } from './tasks/session-cleanup.task';
@@ -13,6 +14,7 @@ import { User } from '../users/entities/user.entity';
   imports: [TypeOrmModule.forFeature([Submission, Exam, Question, User])],
   providers: [
     ExamSessionService,
+    GraderService,
     RandomizerService,
     SessionCleanupTask,
   ],

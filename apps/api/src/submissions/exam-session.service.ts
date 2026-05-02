@@ -6,6 +6,8 @@ import { Exam } from '../exams/entities/exam.entity';
 import { Question } from '../questions/entities/question.entity';
 import { User } from '../users/entities/user.entity';
 import { RandomizerService } from './randomizer.service';
+import { GraderService } from './grader.service';
+import { ExamGateway } from '../gateway/exam.gateway';
 
 @Injectable()
 export class ExamSessionService {
@@ -17,6 +19,8 @@ export class ExamSessionService {
     @InjectRepository(Question)
     private readonly questionRepo: Repository<Question>,
     private readonly randomizerService: RandomizerService,
+    private readonly graderService: GraderService,
+    private readonly examGateway: ExamGateway,
   ) {}
 
   getRemainingSeconds(submission: Submission, exam: Exam): number {
@@ -150,7 +154,7 @@ export class ExamSessionService {
   async autosave(
     submissionId: string,
     studentId: string,
-    dto: { answers: Record<string, string>; flaggedQuestions?: string[] },
+    dto: { answers?: Record<string, string>; flaggedQuestions?: string[] },
   ): Promise<any> {
     const submission = await this.submissionRepo.findOne({
       where: { id: submissionId },
@@ -186,7 +190,9 @@ export class ExamSessionService {
       };
     }
 
-    submission.answers = { ...submission.answers, ...dto.answers };
+    if (dto.answers) {
+      submission.answers = { ...submission.answers, ...dto.answers };
+    }
     if (dto.flaggedQuestions) {
       submission.flaggedQuestions = dto.flaggedQuestions;
     }
@@ -229,24 +235,11 @@ export class ExamSessionService {
       where: { exam: { id: submission.exam.id } },
     });
 
-    const correctAnswerMap = new Map<string, string>();
-    const marksMap = new Map<string, number>();
-    let totalMarks = 0;
-
-    for (const q of questions) {
-      correctAnswerMap.set(q.id, q.correctAnswer);
-      marksMap.set(q.id, q.marks);
-      totalMarks += q.marks;
-    }
-
-    let score = 0;
-    for (const questionId of submission.questionOrder) {
-      if (correctAnswerMap.has(questionId)) {
-        if (submission.answers[questionId] === correctAnswerMap.get(questionId)) {
-          score += marksMap.get(questionId) || 0;
-        }
-      }
-    }
+    const { score, totalMarks } = this.graderService.grade(
+      submission.questionOrder,
+      submission.answers,
+      questions,
+    );
 
     const result = await this.submissionRepo
       .createQueryBuilder()
@@ -269,6 +262,14 @@ export class ExamSessionService {
       return this.submissionRepo.findOne({ where: { id: submission.id } });
     }
 
+    this.examGateway.emitSubmission(submission.exam.id, {
+      submissionId: submission.id,
+      studentName: submission.student.name,
+      score,
+      totalMarks,
+      submittedAt: new Date().toISOString(),
+    });
+
     return {
       score,
       totalMarks,
@@ -290,24 +291,11 @@ export class ExamSessionService {
       where: { exam: { id: exam.id } },
     });
 
-    const correctAnswerMap = new Map<string, string>();
-    const marksMap = new Map<string, number>();
-    let totalMarks = 0;
-
-    for (const q of questions) {
-      correctAnswerMap.set(q.id, q.correctAnswer);
-      marksMap.set(q.id, q.marks);
-      totalMarks += q.marks;
-    }
-
-    let score = 0;
-    for (const questionId of submission.questionOrder) {
-      if (correctAnswerMap.has(questionId)) {
-        if (submission.answers[questionId] === correctAnswerMap.get(questionId)) {
-          score += marksMap.get(questionId) || 0;
-        }
-      }
-    }
+    const { score, totalMarks } = this.graderService.grade(
+      submission.questionOrder,
+      submission.answers,
+      questions,
+    );
 
     const newStatus =
       reason === 'timeout' ? 'timed_out' : 'force_submitted';
@@ -358,6 +346,14 @@ export class ExamSessionService {
 
     submission.violations += 1;
     await this.submissionRepo.save(submission);
+
+    this.examGateway.emitViolation(submission.exam.id, {
+      submissionId: submission.id,
+      studentName: submission.student.name,
+      type: dto.type,
+      violations: submission.violations,
+      autoSubmitted: submission.violations >= submission.exam.maxViolations,
+    });
 
     if (submission.violations >= submission.exam.maxViolations) {
       const result = await this.forceSubmit(

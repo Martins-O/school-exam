@@ -13,6 +13,7 @@ import { ExamsModule } from './exams/exams.module';
 import { QuestionsModule } from './questions/questions.module';
 import { SubmissionsModule } from './submissions/submissions.module';
 import { ResultsModule } from './results/results.module';
+import { GatewayModule } from './gateway/gateway.module';
 import { RequestLoggerMiddleware } from './common/middleware/request-logger.middleware';
 import { HealthController } from './health.controller';
 

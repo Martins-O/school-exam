@@ -1,0 +1,169 @@
+import { Test, TestingModule } from '@nestjs/testing';
+import { INestApplication, ValidationPipe, ClassSerializerInterceptor } from '@nestjs/common';
+import * as request from 'supertest';
+import { AppModule } from '../src/app.module';
+import { Reflector } from '@nestjs/core';
+import { DataSource } from 'typeorm';
+
+describe('Exam Flow (e2e)', () => {
+  let app: INestApplication;
+  let dataSource: DataSource;
+
+  let adminToken: string;
+  let studentToken: string;
+  let examId: string;
+  let questionIds: string[] = [];
+  let submissionId: string;
+
+  beforeAll(async () => {
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
+
+    app = moduleFixture.createNestApplication();
+    app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+    app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
+    app.setGlobalPrefix('api/v1');
+    await app.init();
+
+    dataSource = app.get(DataSource);
+    // Cleanup DB before test (Optional, but safer)
+    await dataSource.query('TRUNCATE TABLE submissions CASCADE');
+    await dataSource.query('TRUNCATE TABLE questions CASCADE');
+    await dataSource.query('TRUNCATE TABLE exams CASCADE');
+    await dataSource.query('TRUNCATE TABLE users CASCADE');
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  it('Step 1: Register Admin', async () => {
+    const res = await request(app.getHttpServer())
+      .post('/api/v1/auth/register')
+      .send({
+        name: 'Admin User',
+        email: 'admin@test.com',
+        password: 'password123',
+      });
+    expect(res.status).toBe(201);
+    
+    // Manually promote to admin since register defaults to student
+    await dataSource.query("UPDATE users SET role = 'admin' WHERE email = 'admin@test.com'");
+
+    const loginRes = await request(app.getHttpServer())
+      .post('/api/v1/auth/login')
+      .send({ email: 'admin@test.com', password: 'password123' });
+    adminToken = loginRes.body.accessToken;
+  });
+
+  it('Step 2: Create Exam (Admin)', async () => {
+    const res = await request(app.getHttpServer())
+      .post('/api/v1/exams')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        title: 'E2E Test Exam',
+        durationMinutes: 30,
+        maxViolations: 3,
+      });
+    expect(res.status).toBe(201);
+    examId = res.body.id;
+  });
+
+  it('Step 3: Add Questions (Admin)', async () => {
+    const questions = [
+      { questionText: 'What is 1 + 1?', options: { A: '2', B: '3', C: '4', D: '5' }, correctAnswer: 'A', marks: 2 },
+      { questionText: 'What is 2 + 2?', options: { A: '3', B: '4', C: '5', D: '6' }, correctAnswer: 'B', marks: 2 },
+      { questionText: 'What is 3 + 3?', options: { A: '5', B: '6', C: '7', D: '8' }, correctAnswer: 'B', marks: 2 },
+    ];
+
+    for (const q of questions) {
+      const res = await request(app.getHttpServer())
+        .post(`/api/v1/exams/${examId}/questions`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send(q);
+      expect(res.status).toBe(201);
+      questionIds.push(res.body.id);
+    }
+  });
+
+  it('Step 4: Publish Exam (Admin)', async () => {
+    const res = await request(app.getHttpServer())
+      .patch(`/api/v1/exams/${examId}/publish`)
+      .set('Authorization', `Bearer ${adminToken}`);
+    expect(res.status).toBe(200);
+    expect(res.body.isPublished).toBe(true);
+  });
+
+  it('Step 5: Register & Login Student', async () => {
+    await request(app.getHttpServer())
+      .post('/api/v1/auth/register')
+      .send({
+        name: 'Student User',
+        email: 'student@test.com',
+        password: 'password123',
+      });
+
+    const loginRes = await request(app.getHttpServer())
+      .post('/api/v1/auth/login')
+      .send({ email: 'student@test.com', password: 'password123' });
+    studentToken = loginRes.body.accessToken;
+  });
+
+  it('Step 6: Start Exam (Student)', async () => {
+    const res = await request(app.getHttpServer())
+      .post(`/api/v1/submissions/start/${examId}`)
+      .set('Authorization', `Bearer ${studentToken}`);
+    expect(res.status).toBe(201);
+    expect(res.body.submissionId).toBeDefined();
+    expect(res.body.questions).toHaveLength(3);
+    submissionId = res.body.submissionId;
+  });
+
+  it('Step 7: Autosave x3 (Student)', async () => {
+    // Save Q1
+    await request(app.getHttpServer())
+      .patch(`/api/v1/submissions/${submissionId}/autosave`)
+      .set('Authorization', `Bearer ${studentToken}`)
+      .send({ answers: { [questionIds[0]]: 'A' } });
+
+    // Save Q2
+    await request(app.getHttpServer())
+      .patch(`/api/v1/submissions/${submissionId}/autosave`)
+      .set('Authorization', `Bearer ${studentToken}`)
+      .send({ answers: { [questionIds[1]]: 'B' } });
+
+    // Save Flag
+    const res = await request(app.getHttpServer())
+      .patch(`/api/v1/submissions/${submissionId}/autosave`)
+      .set('Authorization', `Bearer ${studentToken}`)
+      .send({ flaggedQuestions: [questionIds[2]] });
+      
+    expect(res.status).toBe(200);
+    expect(res.body.remainingSeconds).toBeGreaterThan(0);
+  });
+
+  it('Step 8: Final Submit (Student)', async () => {
+    const res = await request(app.getHttpServer())
+      .post(`/api/v1/submissions/${submissionId}/submit`)
+      .set('Authorization', `Bearer ${studentToken}`)
+      .send({
+        answers: { [questionIds[2]]: 'D' }, // Wrong answer for Q3
+      });
+    
+    expect(res.status).toBe(201);
+    // Q1 correct (2), Q2 correct (2), Q3 wrong (0) = 4 marks out of 6
+    expect(res.body.score).toBe(4);
+    expect(res.body.totalMarks).toBe(6);
+  });
+
+  it('Step 9: Verify Result (Student)', async () => {
+    const res = await request(app.getHttpServer())
+      .get(`/api/v1/results/${submissionId}`)
+      .set('Authorization', `Bearer ${studentToken}`);
+    
+    expect(res.status).toBe(200);
+    expect(res.body.score).toBe(4);
+    expect(res.body.status).toBe('submitted');
+  });
+});

@@ -82,6 +82,7 @@ export class ExamSessionService {
           options: q.options,
           marks: q.marks,
         })),
+        maxViolations: exam.maxViolations,
       };
     }
 
@@ -142,6 +143,7 @@ export class ExamSessionService {
             options: q.options,
             marks: q.marks,
           })),
+        maxViolations: exam.maxViolations,
       };
     } catch (err) {
       await queryRunner.rollbackTransaction();

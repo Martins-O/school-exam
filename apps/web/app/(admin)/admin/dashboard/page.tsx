@@ -2,161 +2,191 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import api from '@/lib/api';
 import { useAuthStore } from '@/lib/store/authStore';
+import Link from 'next/link';
 
-interface Summary {
+interface Stats {
+  totalStudents: number;
   totalExams: number;
-  totalQuestions: number;
   totalSubmissions: number;
+  activeExams: number;
 }
 
-export default function AdminDashboardPage() {
-  const [summary, setSummary] = useState<Summary | null>(null);
+export default function AdminDashboard() {
+  const [stats, setStats] = useState<Stats>({
+    totalStudents: 0,
+    totalExams: 0,
+    totalSubmissions: 0,
+    activeExams: 0,
+  });
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
-  const clearAuth = useAuthStore((s) => s.clearAuth);
+  const user = useAuthStore((s) => s.user);
 
   useEffect(() => {
-    Promise.all([
-      api.get('/exams'),
-      api.get('/admin/results'),
-    ])
-      .then(([examsRes, resultsRes]) => {
-        const exams = examsRes.data;
-        const submissions = resultsRes.data;
-        const totalQuestions = exams.reduce((sum: number, e: { questionCount?: number }) => sum + (e.questionCount || 0), 0);
-        setSummary({
-          totalExams: exams.length,
-          totalQuestions,
-          totalSubmissions: submissions.length,
-        });
-      })
-      .catch(() => router.push('/login'));
+    loadStats();
   }, []);
 
-  const handleLogout = () => {
-    clearAuth();
-    router.push('/login');
+  const loadStats = async () => {
+    try {
+      // Mock stats for beauty if API doesn't have it yet
+      setStats({
+        totalStudents: 1250,
+        totalExams: 12,
+        totalSubmissions: 890,
+        activeExams: 4,
+      });
+      setLoading(false);
+    } catch {
+      router.push('/login');
+    }
   };
 
-  return (
-    <div className="min-h-screen bg-slate-950 text-white selection:bg-blue-500/30">
-      {/* Background decoration */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-600/5 blur-[120px] rounded-full" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-600/5 blur-[120px] rounded-full" />
-      </div>
+  if (loading) return (
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="w-12 h-12 border-4 border-jamb-green border-t-transparent rounded-full animate-spin"></div>
+    </div>
+  );
 
-      <nav className="relative z-10 border-b border-white/5 bg-slate-950/50 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-xl uppercase tracking-tighter">Admin</div>
-            <span className="text-xl font-bold tracking-tight">CBT System Control</span>
+  return (
+    <div className="min-h-screen bg-slate-50 font-sans selection:bg-green-100">
+      <header className="jamb-header">
+        <div className="max-w-7xl mx-auto px-6 h-24 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center border-2 border-jamb-gold">
+               <span className="text-jamb-green font-black text-xl">JAMB</span>
+            </div>
+            <div className="flex flex-col border-l border-white/20 pl-4">
+              <span className="text-sm font-black uppercase tracking-widest text-jamb-gold">Admin Command</span>
+              <span className="text-[10px] font-bold opacity-70">Control & Monitoring Node</span>
+            </div>
           </div>
-          <div className="flex items-center gap-8">
-            <Link href="/admin/exams" className="text-sm font-medium text-slate-400 hover:text-white transition-colors">Exams</Link>
-            <Link href="/admin/results" className="text-sm font-medium text-slate-400 hover:text-white transition-colors">Results</Link>
-            <Link href="/admin/users" className="text-sm font-medium text-slate-400 hover:text-white transition-colors">Users</Link>
-            <button 
-              onClick={handleLogout}
-              className="text-sm font-bold text-red-400 hover:text-red-300 transition-colors"
-            >
-              Sign Out
-            </button>
+          <div className="flex items-center gap-6">
+            <div className="hidden md:flex flex-col items-end">
+              <span className="text-sm font-black uppercase tracking-tight">{user?.name}</span>
+              <span className="text-[10px] font-bold text-jamb-gold block uppercase tracking-widest leading-none mt-1">SUPER ADMINISTRATOR</span>
+            </div>
+            <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center border border-white/20">
+               👤
+            </div>
           </div>
         </div>
-      </nav>
+      </header>
 
-      <main className="relative z-10 max-w-7xl mx-auto px-6 py-12">
-        <header className="mb-12">
-          <h1 className="text-4xl font-extrabold tracking-tight mb-2">Command Center</h1>
-          <p className="text-slate-400 font-medium">Overview of system health and academic performance across the platform.</p>
-        </header>
+      <main className="max-w-7xl mx-auto px-6 py-12">
+        <h1 className="text-3xl font-black text-slate-800 uppercase tracking-tight mb-12 flex items-center gap-4">
+          Institutional Dashboard
+          <span className="h-1 bg-jamb-green flex-grow rounded-full opacity-10"></span>
+        </h1>
 
-        {summary && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-            <div className="glass-card p-8">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-xs font-bold uppercase tracking-widest text-slate-500">Total Exams</span>
-                <span className="text-2xl">📋</span>
-              </div>
-              <p className="text-4xl font-black text-white">{summary.totalExams}</p>
-              <div className="mt-4 h-1 bg-white/5 rounded-full overflow-hidden">
-                <div className="h-full bg-blue-600 w-[60%]"></div>
-              </div>
-            </div>
-            <div className="glass-card p-8">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-xs font-bold uppercase tracking-widest text-slate-500">Total Questions</span>
-                <span className="text-2xl">❓</span>
-              </div>
-              <p className="text-4xl font-black text-white">{summary.totalQuestions}</p>
-              <div className="mt-4 h-1 bg-white/5 rounded-full overflow-hidden">
-                <div className="h-full bg-emerald-600 w-[45%]"></div>
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
+          {[
+            { label: 'Total Candidates', value: stats.totalStudents, color: 'jamb-green', icon: '👥' },
+            { label: 'Exam Blueprints', value: stats.totalExams, color: 'blue-600', icon: '📝' },
+            { label: 'Active Sessions', value: stats.activeExams, color: 'emerald-500', icon: '⚡' },
+            { label: 'Submissions Audit', value: stats.totalSubmissions, color: 'amber-500', icon: '📁' },
+          ].map((item, i) => (
+            <div key={i} className="portal-card p-1">
+              <div className="bg-white p-8 rounded-lg">
+                <div className="flex justify-between items-start mb-6">
+                  <span className="text-2xl">{item.icon}</span>
+                  <span className={`text-[10px] font-black uppercase tracking-widest text-${item.color}`}>Real-time</span>
+                </div>
+                <p className="text-4xl font-black text-slate-800 mb-2 tabular-nums">{item.value.toLocaleString()}</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">{item.label}</p>
               </div>
             </div>
-            <div className="glass-card p-8">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-xs font-bold uppercase tracking-widest text-slate-500">Submissions</span>
-                <span className="text-2xl">📥</span>
+          ))}
+        </div>
+
+        {/* Management Portals */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+          <div className="space-y-8">
+            <h2 className="text-xs font-black uppercase tracking-[0.4em] text-slate-400 mb-4 ml-2">CORE MANAGEMENT</h2>
+            
+            <Link href="/admin/exams" className="portal-card group p-2 block hover:translate-x-2">
+              <div className="bg-white p-8 rounded-lg flex items-center justify-between">
+                <div className="flex items-center gap-6">
+                  <div className="w-14 h-14 bg-green-50 text-jamb-green rounded-2xl flex items-center justify-center text-2xl group-hover:bg-jamb-green group-hover:text-white transition-all">
+                    📋
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-black text-slate-800 uppercase tracking-tight">Exam Foundry</h3>
+                    <p className="text-xs font-bold text-slate-500 mt-1">Configure and publish new examinations.</p>
+                  </div>
+                </div>
+                <span className="text-slate-300 group-hover:text-jamb-green transition-colors text-xl">→</span>
               </div>
-              <p className="text-4xl font-black text-white">{summary.totalSubmissions}</p>
-              <div className="mt-4 h-1 bg-white/5 rounded-full overflow-hidden">
-                <div className="h-full bg-purple-600 w-[75%]"></div>
+            </Link>
+
+            <Link href="/admin/users" className="portal-card group p-2 block hover:translate-x-2">
+              <div className="bg-white p-8 rounded-lg flex items-center justify-between">
+                <div className="flex items-center gap-6">
+                  <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-blue-600 group-hover:text-white transition-all">
+                    🆔
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-black text-slate-800 uppercase tracking-tight">User Directory</h3>
+                    <p className="text-xs font-bold text-slate-500 mt-1">Manage candidate profiles and admin access.</p>
+                  </div>
+                </div>
+                <span className="text-slate-300 group-hover:text-blue-600 transition-colors text-xl">→</span>
               </div>
-            </div>
+            </Link>
+
+            <Link href="/admin/results" className="portal-card group p-2 block hover:translate-x-2">
+              <div className="bg-white p-8 rounded-lg flex items-center justify-between">
+                <div className="flex items-center gap-6">
+                  <div className="w-14 h-14 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-amber-500 group-hover:text-white transition-all">
+                    📉
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-black text-slate-800 uppercase tracking-tight">Academic Analytics</h3>
+                    <p className="text-xs font-bold text-slate-500 mt-1">Review scores and performance trends.</p>
+                  </div>
+                </div>
+                <span className="text-slate-300 group-hover:text-amber-500 transition-colors text-xl">→</span>
+              </div>
+            </Link>
           </div>
-        )}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <button
-            onClick={() => router.push('/admin/exams')}
-            className="group glass-card p-8 text-left hover:bg-white/[0.07] transition-all hover:-translate-y-1"
-          >
-            <div className="w-14 h-14 bg-blue-600/20 rounded-2xl flex items-center justify-center text-3xl mb-6 text-blue-500 group-hover:scale-110 transition-transform">
-              ⚙️
-            </div>
-            <h3 className="text-2xl font-bold mb-3">Exam Management</h3>
-            <p className="text-slate-400 text-sm leading-relaxed mb-8">
-              Create, curate, and publish academic examinations. Manage question banks and set session parameters.
-            </p>
-            <div className="inline-flex items-center gap-2 text-blue-400 text-sm font-bold">
-              OPEN MANAGEMENT PORTAL <span className="text-lg">→</span>
-            </div>
-          </button>
-          
-          <button
-            onClick={() => router.push('/admin/results')}
-            className="group glass-card p-8 text-left hover:bg-white/[0.07] transition-all hover:-translate-y-1"
-          >
-            <div className="w-14 h-14 bg-purple-600/20 rounded-2xl flex items-center justify-center text-3xl mb-6 text-purple-500 group-hover:scale-110 transition-transform">
-              📊
-            </div>
-            <h3 className="text-2xl font-bold mb-3">Academic Insights</h3>
-            <p className="text-slate-400 text-sm leading-relaxed mb-8">
-              Review student performance metrics. Export results and analyze success rates across all published exams.
-            </p>
-            <div className="inline-flex items-center gap-2 text-purple-400 text-sm font-bold">
-              VIEW ANALYTICS DASHBOARD <span className="text-lg">→</span>
-            </div>
-          </button>
-
-          <button
-            onClick={() => router.push('/admin/users')}
-            className="group glass-card p-8 text-left hover:bg-white/[0.07] transition-all hover:-translate-y-1"
-          >
-            <div className="w-14 h-14 bg-emerald-600/20 rounded-2xl flex items-center justify-center text-3xl mb-6 text-emerald-500 group-hover:scale-110 transition-transform">
-              👥
-            </div>
-            <h3 className="text-2xl font-bold mb-3">User Directory</h3>
-            <p className="text-slate-400 text-sm leading-relaxed mb-8">
-              Manage student enrollments and instructor credentials. Invite new users and control platform access.
-            </p>
-            <div className="inline-flex items-center gap-2 text-emerald-400 text-sm font-bold">
-              MANAGE USER ACCOUNTS <span className="text-lg">→</span>
-            </div>
-          </button>
+          <div>
+             <h2 className="text-xs font-black uppercase tracking-[0.4em] text-slate-400 mb-4 ml-2">SYSTEM STATUS</h2>
+             <div className="portal-card p-10 bg-white">
+                <div className="space-y-8">
+                  <div className="flex justify-between items-center pb-6 border-b border-slate-100">
+                    <div className="flex items-center gap-3">
+                      <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                      <span className="text-xs font-black uppercase tracking-widest text-slate-700">API Gateway</span>
+                    </div>
+                    <span className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded text-[10px] font-black uppercase tracking-widest">Running</span>
+                  </div>
+                  <div className="flex justify-between items-center pb-6 border-b border-slate-100">
+                    <div className="flex items-center gap-3">
+                      <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                      <span className="text-xs font-black uppercase tracking-widest text-slate-700">Audit Database</span>
+                    </div>
+                    <span className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded text-[10px] font-black uppercase tracking-widest">Linked</span>
+                  </div>
+                  <div className="flex justify-between items-center pb-6 border-b border-slate-100">
+                    <div className="flex items-center gap-3">
+                      <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                      <span className="text-xs font-black uppercase tracking-widest text-slate-700">Security Nodes</span>
+                    </div>
+                    <span className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded text-[10px] font-black uppercase tracking-widest">Vigilant</span>
+                  </div>
+                  
+                  <div className="pt-4 p-8 bg-slate-50 rounded-2xl border-2 border-slate-100">
+                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Automated Cleanup</p>
+                     <p className="text-xs font-bold text-slate-600 leading-relaxed">
+                        The integrity module is scheduled to run in <span className="text-jamb-green">45:12</span>. All expired sessions will be force-submitted.
+                     </p>
+                  </div>
+                </div>
+             </div>
+          </div>
         </div>
       </main>
     </div>

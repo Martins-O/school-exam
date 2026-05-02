@@ -2,41 +2,56 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --jamb-green: #00602F;
+  --jamb-gold: #FFD700;
+  --jamb-blue: #4D90FE;
+  --jamb-red: #D32F2F;
+  --background: #FFFFFF;
+  --foreground: #1a1a1a;
+}
+
 @layer base {
-  :root {
-    --background: 224 71% 4%;
-    --foreground: 213 31% 91%;
-    --card: 224 71% 4%;
-    --card-foreground: 213 31% 91%;
-    --popover: 224 71% 4%;
-    --popover-foreground: 215 20.2% 65.1%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 1.2%;
-    --secondary: 222.2 47.4% 11.2%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 223 47% 11%;
-    --muted-foreground: 215.4 16.3% 56.9%;
-    --accent: 216 34% 17%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 216 34% 17%;
-    --input: 216 34% 17%;
-    --ring: 212.7 26.8% 83.9%;
+  body {
+    @apply bg-slate-50 text-slate-900;
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
 
-body {
-  @apply bg-slate-950 text-slate-50 antialiased selection:bg-blue-500/30;
-  font-family: 'Inter', sans-serif;
-}
+@layer components {
+  .portal-card {
+    @apply bg-white border border-slate-200 shadow-sm rounded-xl overflow-hidden transition-all duration-200;
+  }
 
-@layer utilities {
-  .glass {
-    @apply bg-white/5 border border-white/10 backdrop-blur-md;
+  .portal-card:hover {
+    @apply shadow-md border-jamb-green/20;
+  }
+
+  .jamb-header {
+    @apply bg-[var(--jamb-green)] text-white shadow-lg;
+  }
+
+  .btn-primary {
+    @apply bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-all active:scale-95 shadow-sm;
+  }
+
+  .btn-secondary {
+    @apply bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 px-6 rounded-lg transition-all active:scale-95 border border-slate-200;
+  }
+
+  .btn-green {
+    @apply bg-[var(--jamb-green)] hover:bg-green-800 text-white font-bold py-2 px-6 rounded-lg transition-all active:scale-95;
+  }
+
+  .nav-tab {
+    @apply px-6 py-3 font-bold text-sm tracking-tight border-b-4 border-transparent transition-all;
+  }
+
+  .nav-tab.active {
+    @apply border-jamb-gold text-jamb-gold bg-black/10;
   }
   
   .glass-card {
-    @apply bg-white/5 border border-white/10 backdrop-blur-md rounded-2xl shadow-xl shadow-black/20;
+     @apply bg-white/80 backdrop-blur-md border border-slate-200 shadow-xl;
   }
 }

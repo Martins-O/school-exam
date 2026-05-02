@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
+import toast from 'react-hot-toast';
+import Link from 'next/link';
 
 interface Exam {
   id: string;
@@ -14,7 +16,9 @@ interface Exam {
 
 export default function AdminExamsPage() {
   const [exams, setExams] = useState<Exam[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
+  
   const [title, setTitle] = useState('');
   const [duration, setDuration] = useState(60);
   const router = useRouter();
@@ -29,13 +33,19 @@ export default function AdminExamsPage() {
       const examsData = res.data;
       const withCounts = await Promise.all(
         examsData.map(async (e: Exam) => {
-          const qRes = await api.get(`/exams/${e.id}`);
-          return { ...e, questionCount: qRes.data.questionCount || 0 };
+          try {
+            const qRes = await api.get(`/exams/${e.id}`);
+            return { ...e, questionCount: qRes.data.questionCount || 0 };
+          } catch {
+            return { ...e, questionCount: 0 };
+          }
         })
       );
       setExams(withCounts);
     } catch {
       router.push('/login');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -43,138 +53,184 @@ export default function AdminExamsPage() {
     e.preventDefault();
     try {
       await api.post('/exams', { title, durationMinutes: duration });
+      toast.success('Exam entry initialized');
       setTitle('');
       setDuration(60);
       setShowCreate(false);
       loadExams();
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to create exam');
+      toast.error(err.response?.data?.message || 'Initialization failed');
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this exam?')) return;
+  const handleDelete = async (id: string, examTitle: string) => {
+    if (!confirm(`Confirm decommissioning of "${examTitle}"? This action is tracked.`)) return;
     try {
       await api.delete(`/exams/${id}`);
+      toast.success('Record decommissioned');
       loadExams();
-    } catch {}
+    } catch {
+      toast.error('Deletion operation failed');
+    }
   };
 
   const handlePublish = async (id: string) => {
     try {
       await api.patch(`/exams/${id}/publish`);
+      toast.success('Protocol is now LIVE on gateway');
       loadExams();
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to publish');
+      toast.error(err.response?.data?.message || 'Activation failed');
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Manage Exams</h1>
-          <button
-            onClick={() => setShowCreate(!showCreate)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-          >
-            {showCreate ? 'Cancel' : 'Create Exam'}
-          </button>
-        </div>
+  if (loading) return (
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="w-12 h-12 border-4 border-jamb-green border-t-transparent rounded-full animate-spin"></div>
+    </div>
+  );
 
+  return (
+    <div className="min-h-screen bg-slate-50 font-sans selection:bg-green-100">
+      <header className="jamb-header relative z-10">
+        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+          <Link href="/admin/dashboard" className="flex items-center gap-4 group">
+            <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center font-black text-jamb-green text-xl border-b-2 border-slate-300">
+              J
+            </div>
+            <span className="text-xl font-black tracking-tight flex items-center gap-2">
+              JAMB <span className="text-xs font-bold text-jamb-gold/80 block uppercase tracking-widest border-l border-white/20 pl-4 mt-1">Foundry</span>
+            </span>
+          </Link>
+          <div className="flex items-center gap-6">
+            <Link href="/admin/dashboard" className="text-[10px] font-black uppercase tracking-widest hover:text-jamb-gold transition-colors">BACK TO DASHBOARD</Link>
+            <button 
+              onClick={() => setShowCreate(!showCreate)}
+              className="px-6 py-2 bg-jamb-gold text-jamb-green font-black rounded-lg text-xs uppercase tracking-widest shadow-lg shadow-black/20 hover:scale-105 transition-all"
+            >
+              {showCreate ? 'Discard Deployment' : 'New Exam Deployment'}
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-7xl mx-auto px-6 py-12">
         {showCreate && (
-          <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-            <h2 className="text-xl font-semibold mb-4">Create New Exam</h2>
-            <form onSubmit={handleCreate} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Title</label>
+          <div className="portal-card p-10 mb-12 animate-in fade-in slide-in-from-top-4 duration-500 bg-white">
+            <h2 className="text-2xl font-black mb-8 text-jamb-green uppercase tracking-tight flex items-center gap-3">
+              <span className="w-1.5 h-8 bg-jamb-gold rounded-full"></span>
+              Initialize Exam Blueprint
+            </h2>
+            <form onSubmit={handleCreate} className="grid grid-cols-1 md:grid-cols-3 gap-8 items-end">
+              <div className="md:col-span-2">
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Examination Designation</label>
                 <input
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-6 py-4 text-slate-800 font-bold focus:outline-none focus:ring-4 focus:ring-green-100 focus:border-jamb-green/40 transition-all"
+                  placeholder="e.g. Unified Tertiary Matriculation (English)"
                   required
-                  minLength={3}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Duration (minutes)</label>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Session Duration (Min)</label>
                 <input
                   type="number"
                   value={duration}
                   onChange={(e) => setDuration(parseInt(e.target.value))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-6 py-4 text-slate-800 font-bold focus:outline-none focus:ring-4 focus:ring-green-100 focus:border-jamb-green/40 transition-all"
                   required
                   min={1}
-                  max={480}
                 />
               </div>
-              <button
-                type="submit"
-                className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700"
-              >
-                Create
-              </button>
+              <div className="md:col-span-3 pt-4">
+                <button
+                  type="submit"
+                  className="px-12 py-5 bg-jamb-green text-white font-black rounded-xl hover:bg-green-800 transition-all shadow-xl shadow-green-900/20 active:scale-95 uppercase text-xs tracking-widest"
+                >
+                  Confirm Deployment
+                </button>
+              </div>
             </form>
           </div>
         )}
 
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b">
-              <tr>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">Title</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">Duration</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">Questions</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">Status</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">Actions</th>
+        <div className="portal-card overflow-hidden bg-white">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-50 text-[10px] uppercase tracking-[0.2em] font-black text-slate-400 border-b border-slate-200">
+                <th className="px-8 py-6">Exam Identity</th>
+                <th className="px-8 py-6">Metrics</th>
+                <th className="px-8 py-6">Status</th>
+                <th className="px-8 py-6 text-right">Node Controls</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-slate-100">
               {exams.map((exam) => (
-                <tr key={exam.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">{exam.title}</td>
-                  <td className="px-6 py-4">{exam.durationMinutes} min</td>
-                  <td className="px-6 py-4">{exam.questionCount || 0}</td>
-                  <td className="px-6 py-4">
+                <tr key={exam.id} className="hover:bg-green-50/30 transition-colors group">
+                  <td className="px-8 py-7">
+                    <div className="font-black text-lg text-slate-800 group-hover:text-jamb-green transition-colors uppercase tracking-tight">{exam.title}</div>
+                    <div className="text-[10px] font-mono text-slate-400 mt-0.5">ID: {exam.id.split('-')[0].toUpperCase()}</div>
+                  </td>
+                  <td className="px-8 py-7">
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex items-center gap-2 text-[10px] font-black text-slate-500 uppercase tracking-tighter">
+                        <span className="opacity-40">⏱️</span> {exam.durationMinutes} MINUTES
+                      </div>
+                      <div className="flex items-center gap-2 text-[10px] font-black text-slate-500 uppercase tracking-tighter">
+                        <span className="opacity-40">📝</span> {exam.questionCount || 0} QUESTIONS
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-8 py-7">
                     <span
-                      className={`px-2 py-1 rounded-full text-sm ${
+                      className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border transition-all ${
                         exam.isPublished
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-gray-100 text-gray-800'
+                          ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
+                          : 'bg-amber-50 text-amber-600 border-amber-200'
                       }`}
                     >
-                      {exam.isPublished ? 'Published' : 'Draft'}
+                      <span className={`w-1.5 h-1.5 rounded-full ${exam.isPublished ? 'bg-emerald-500 animate-pulse' : 'bg-amber-400'}`}></span>
+                      {exam.isPublished ? 'LIVE ON GATEWAY' : 'DRAFT PROTOCOL'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 space-x-2">
-                    <button
-                      onClick={() => router.push(`/admin/exams/${exam.id}/questions`)}
-                      className="text-blue-600 hover:underline"
-                    >
-                      Questions
-                    </button>
-                    {!exam.isPublished && (
-                      <button
-                        onClick={() => handlePublish(exam.id)}
-                        className="text-green-600 hover:underline"
+                  <td className="px-8 py-7 text-right">
+                    <div className="flex items-center justify-end gap-6 text-[10px] font-black uppercase tracking-widest">
+                      <Link
+                        href={`/admin/exams/${exam.id}/questions`}
+                        className="text-blue-600 hover:text-blue-800 transition-colors underline underline-offset-4"
                       >
-                        Publish
+                        Bank
+                      </Link>
+                      {!exam.isPublished && (
+                        <button
+                          onClick={() => handlePublish(exam.id)}
+                          className="text-emerald-500 hover:text-emerald-700 transition-colors underline underline-offset-4"
+                        >
+                          Activate
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleDelete(exam.id, exam.title)}
+                        className="text-red-500 hover:text-red-700 transition-colors underline underline-offset-4"
+                      >
+                        Decommission
                       </button>
-                    )}
-                    <button
-                      onClick={() => handleDelete(exam.id)}
-                      className="text-red-600 hover:underline"
-                    >
-                      Delete
-                    </button>
+                    </div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+          {exams.length === 0 && (
+            <div className="p-24 text-center text-slate-400 bg-white">
+              <p className="text-sm font-black uppercase tracking-widest mb-2">No active examination protocols.</p>
+              <p className="text-[10px] font-bold">Initiate a new deployment using the primary control above.</p>
+            </div>
+          )}
         </div>
-      </div>
+      </main>
     </div>
   );
 }

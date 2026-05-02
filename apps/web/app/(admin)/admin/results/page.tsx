@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
+import Link from 'next/link';
 
 interface Result {
   submissionId: string;
@@ -18,6 +19,7 @@ interface Result {
 
 export default function AdminResultsPage() {
   const [results, setResults] = useState<Result[]>([]);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
@@ -30,93 +32,113 @@ export default function AdminResultsPage() {
       setResults(res.data);
     } catch {
       router.push('/login');
+    } finally {
+      setLoading(false);
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">All Results</h1>
+  if (loading) return (
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="w-12 h-12 border-4 border-jamb-green border-t-transparent rounded-full animate-spin"></div>
+    </div>
+  );
 
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b">
-              <tr>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">
-                  Student
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">
-                  Exam
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">
-                  Score
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">
-                  Percentage
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">
-                  Submitted
-                </th>
+  return (
+    <div className="min-h-screen bg-slate-50 font-sans selection:bg-green-100">
+      <header className="jamb-header">
+        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+          <Link href="/admin/dashboard" className="flex items-center gap-4 group">
+            <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center font-black text-jamb-green text-xl border-b-2 border-slate-300">
+              J
+            </div>
+            <span className="text-xl font-black tracking-tight flex items-center gap-2">
+              JAMB <span className="text-xs font-bold text-jamb-gold/80 block uppercase tracking-widest border-l border-white/20 pl-4 mt-1">Analytics</span>
+            </span>
+          </Link>
+          <div className="flex items-center gap-6">
+            <Link href="/admin/dashboard" className="text-[10px] font-black uppercase tracking-widest hover:text-jamb-gold transition-colors">BACK TO DASHBOARD</Link>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-7xl mx-auto px-6 py-12">
+        <div className="mb-12 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-black text-slate-800 uppercase tracking-tight mb-2">Academic Audit Logs</h1>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">{results.length} CERTIFIED RECORDS DETECTED</p>
+          </div>
+          <button className="px-6 py-2 bg-slate-800 text-white font-black rounded-lg text-[10px] uppercase tracking-widest shadow-lg hover:bg-slate-900 transition-all">
+            Export Master Spreadsheet
+          </button>
+        </div>
+
+        <div className="portal-card overflow-hidden bg-white">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-50 text-[10px] uppercase tracking-[0.2em] font-black text-slate-400 border-b border-slate-200">
+                <th className="px-8 py-6">Candidate Identity</th>
+                <th className="px-8 py-6">Examination Terminal</th>
+                <th className="px-8 py-6 text-center">Score Grade</th>
+                <th className="px-8 py-6 text-center">State</th>
+                <th className="px-8 py-6 text-right">Audit Timestamp</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-slate-100">
               {results.map((r) => (
                 <tr
                   key={r.submissionId}
                   onClick={() => router.push(`/results/${r.submissionId}`)}
-                  className="hover:bg-gray-50 cursor-pointer"
+                  className="hover:bg-blue-50/30 cursor-pointer transition-colors group"
                 >
-                  <td className="px-6 py-4">
-                    <div className="font-medium">{r.studentName}</div>
-                    <div className="text-sm text-gray-500">{r.studentEmail}</div>
+                  <td className="px-8 py-6">
+                    <div className="font-black text-slate-800 group-hover:text-jamb-green transition-colors uppercase tracking-tight">{r.studentName}</div>
+                    <div className="text-[10px] font-mono text-slate-400 mt-1 uppercase">{r.studentEmail}</div>
                   </td>
-                  <td className="px-6 py-4">{r.examTitle}</td>
-                  <td className="px-6 py-4">
-                    {r.score}/{r.totalMarks}
+                  <td className="px-8 py-6 text-sm font-bold text-slate-600 uppercase tracking-tighter">
+                    {r.examTitle}
                   </td>
-                  <td className="px-6 py-4">
-                    <span
-                      className={`px-2 py-1 rounded-full text-sm ${
+                  <td className="px-8 py-6">
+                    <div className="flex flex-col items-center">
+                       <div className={`px-4 py-1.5 rounded-lg font-black text-sm border shadow-sm ${
                         r.percentage >= 70
-                          ? 'bg-green-100 text-green-800'
+                          ? 'bg-emerald-50 border-emerald-200 text-emerald-600'
                           : r.percentage >= 50
-                          ? 'bg-yellow-100 text-yellow-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}
-                    >
-                      {r.percentage.toFixed(0)}%
-                    </span>
+                          ? 'bg-amber-50 border-amber-200 text-amber-600'
+                          : 'bg-red-50 border-red-200 text-red-600'
+                      }`}>
+                        {Math.round(r.percentage)}%
+                      </div>
+                      <div className="text-[8px] font-black text-slate-400 mt-1.5 tracking-widest tabular-nums">
+                        {r.score} OF {r.totalMarks}
+                      </div>
+                    </div>
                   </td>
-                  <td className="px-6 py-4">
-                    <span
-                      className={`px-2 py-1 rounded-full text-sm ${
-                        r.status === 'submitted'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}
-                    >
+                  <td className="px-8 py-6 text-center">
+                    <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${
+                      r.status === 'submitted'
+                        ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
+                        : 'bg-red-50 text-red-600 border-red-200'
+                    }`}>
                       {r.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-600">
-                    {new Date(r.submittedAt).toLocaleString()}
+                  <td className="px-8 py-6 text-right font-mono text-[10px] text-slate-400 uppercase">
+                    <div className="font-black text-slate-600">{new Date(r.submittedAt).toLocaleDateString()}</div>
+                    <div className="opacity-60">{new Date(r.submittedAt).toLocaleTimeString()}</div>
                   </td>
                 </tr>
               ))}
               {results.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
-                    No submissions yet.
+                  <td colSpan={5} className="px-8 py-24 text-center text-slate-400 bg-white uppercase tracking-widest font-black text-xs">
+                    Verification Engine is empty.
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

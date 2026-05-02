@@ -1,8 +1,9 @@
 interface ExamTimerProps {
   remainingSeconds: number;
+  isCritical?: boolean;
 }
 
-export default function ExamTimer({ remainingSeconds }: ExamTimerProps) {
+export default function ExamTimer({ remainingSeconds, isCritical }: ExamTimerProps) {
   const h = Math.floor(remainingSeconds / 3600);
   const m = Math.floor((remainingSeconds % 3600) / 60);
   const s = remainingSeconds % 60;
@@ -11,20 +12,16 @@ export default function ExamTimer({ remainingSeconds }: ExamTimerProps) {
   const mm = m.toString().padStart(2, '0');
   const ss = s.toString().padStart(2, '0');
   
-  const isLow = remainingSeconds < 300;
-  const isCritical = remainingSeconds < 60;
+  const isDanger = remainingSeconds < 300;
 
   return (
-    <div className="flex flex-col items-end">
-      <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] mb-1">Time Remaining</p>
-      <div
-        className={`text-4xl font-black tracking-widest flex items-center tabular-nums transition-colors duration-500 ${
-          isCritical ? 'text-red-500 animate-pulse' : isLow ? 'text-orange-500' : 'text-white'
-        }`}
-      >
-        {h > 0 && <span>{hh}<span className="text-white/20 px-1">:</span></span>}
+    <div className={`bg-black/20 border-2 rounded-xl px-4 py-2 min-w-[140px] text-center transition-all duration-500 ${
+      isDanger ? 'border-red-500 bg-red-500/10' : 'border-jamb-gold bg-black/40'
+    }`}>
+      <div className={`text-3xl font-black font-mono tracking-wider tabular-nums ${isDanger ? 'text-red-500 animate-pulse' : 'text-jamb-gold'}`}>
+        {h > 0 && <span>{hh}:</span>}
         <span>{mm}</span>
-        <span className="text-white/20 px-1">:</span>
+        <span className="opacity-40 mx-0.5">:</span>
         <span>{ss}</span>
       </div>
     </div>

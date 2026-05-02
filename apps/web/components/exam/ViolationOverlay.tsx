@@ -1,3 +1,5 @@
+'use client';
+
 interface ViolationOverlayProps {
   violations: number;
   maxViolations: number;
@@ -6,26 +8,31 @@ interface ViolationOverlayProps {
 
 export default function ViolationOverlay({ violations, maxViolations, onDismiss }: ViolationOverlayProps) {
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
-        <div className="text-red-600 text-5xl mb-4 text-center">⚠️</div>
-        <h2 className="text-2xl font-bold mb-4 text-center">Warning: Cheating Detected</h2>
-        <p className="text-gray-700 mb-6 text-center">
-          Leaving the exam window or exiting fullscreen is strictly prohibited.
+    <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center z-[100] p-6 selection:bg-red-100">
+      <div className="portal-card max-w-sm w-full p-10 bg-white border-red-500/30 shadow-2xl animate-in zoom-in duration-300">
+        <div className="text-red-600 text-6xl mb-8 text-center drop-shadow-sm">⚖️</div>
+        <h2 className="text-2xl font-black mb-4 text-center text-slate-800 uppercase tracking-tight">Security Protocol Violation</h2>
+        <p className="text-slate-500 mb-8 text-center text-sm font-medium leading-relaxed">
+          The system has detected an attempt to leave the active examination environment. This action has been recorded in your audit log.
         </p>
-        <div className="bg-red-50 border border-red-200 p-4 rounded-md mb-6">
-          <p className="font-semibold text-center">
-            Violation {violations} of {maxViolations}
-          </p>
-          <p className="text-sm text-gray-600 mt-2 text-center">
-            Reaching {maxViolations} violations will result in automatic submission.
+        
+        <div className="bg-red-50 border-2 border-red-100 p-6 rounded-2xl mb-8 flex flex-col items-center">
+          <p className="text-[10px] font-black uppercase tracking-widest text-red-600 mb-1">Violation Count</p>
+          <div className="flex items-center gap-1">
+             <span className="text-4xl font-black text-red-700">{violations}</span>
+             <span className="text-xl font-bold text-red-300">/</span>
+             <span className="text-xl font-bold text-red-400">{maxViolations}</span>
+          </div>
+          <p className="text-[9px] font-bold text-red-800 mt-4 uppercase tracking-tighter text-center">
+             REACHING {maxViolations} CAUSES AUTOMATIC DISQUALIFICATION
           </p>
         </div>
+
         <button
           onClick={onDismiss}
-          className="w-full bg-red-600 text-white py-3 rounded-md font-bold hover:bg-red-700 transition-colors shadow-md"
+          className="w-full bg-red-600 text-white py-4 rounded-xl font-black hover:bg-red-700 transition-all shadow-xl shadow-red-900/10 uppercase text-xs tracking-widest active:scale-95"
         >
-          I UNDERSTAND
+          Confirm Acknowledgment
         </button>
       </div>
     </div>

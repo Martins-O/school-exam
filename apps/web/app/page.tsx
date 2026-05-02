@@ -1,101 +1,160 @@
+'use client';
+
 import Link from 'next/link';
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-slate-950 text-white selection:bg-blue-500/30">
-      {/* Background decoration */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/10 blur-[120px] rounded-full" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/10 blur-[120px] rounded-full" />
-      </div>
-
-      <nav className="relative z-10 border-b border-white/5 bg-slate-950/50 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-xl shadow-lg shadow-blue-500/20">
-              C
-            </div>
-            <span className="text-xl font-bold tracking-tight">CBT Platform</span>
-          </div>
+    <div className="min-h-screen bg-slate-50 text-slate-900 selection:bg-green-100 selection:text-green-900">
+      {/* Official Header */}
+      <header className="jamb-header relative z-20">
+        <div className="max-w-7xl mx-auto px-6 h-24 flex items-center justify-between">
           <div className="flex items-center gap-4">
+            <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center border-4 border-jamb-gold shadow-inner overflow-hidden">
+              <span className="text-jamb-green font-black text-2xl">J</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xl font-black tracking-tighter leading-none">JAMB</span>
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-80">COMPUTER BASED TEST</span>
+            </div>
+          </div>
+          <nav className="hidden md:flex items-center gap-8">
+            <Link href="/login" className="text-sm font-black uppercase tracking-widest hover:text-jamb-gold transition-colors">Candidate Portal</Link>
+            <Link href="/login" className="text-sm font-black uppercase tracking-widest hover:text-jamb-gold transition-colors">Admin Login</Link>
             <Link 
               href="/login" 
-              className="px-6 py-2 text-sm font-bold bg-blue-600 hover:bg-blue-500 rounded-full transition-all shadow-lg shadow-blue-600/20 active:scale-95"
+              className="px-6 py-2 bg-jamb-gold text-jamb-green font-black rounded-lg text-xs uppercase tracking-widest shadow-lg shadow-black/20 hover:scale-105 transition-all"
             >
-              Access Portal
+              Sign In
             </Link>
-          </div>
+          </nav>
         </div>
-      </nav>
+      </header>
 
-      <main className="relative z-10 max-w-7xl mx-auto px-6 pt-32 pb-20 text-center">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold mb-8">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-          </span>
-          SECURE COMPUTER-BASED TESTING
+      {/* Sub Header / News Ticker */}
+      <div className="bg-jamb-gold text-jamb-green py-2 px-6 overflow-hidden whitespace-nowrap">
+        <div className="animate-marquee inline-block text-[10px] font-black uppercase tracking-widest">
+          IMPORTANT: CANDIDATES ARE ADVISED TO REGISTER WITH THEIR VALID DETAILS — EXAMINATION MALPRACTICE IS A PUNISHABLE OFFENSE — ENSURE YOUR SYSTEM IS FUNCTIONING BEFORE STARTING THE TEST
         </div>
-        
-        <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-8 bg-gradient-to-b from-white to-slate-400 bg-clip-text text-transparent">
-          The Modern Standard for <br /> Secure Academic Exams.
-        </h1>
-        
-        <p className="max-w-2xl mx-auto text-lg text-slate-400 mb-12 leading-relaxed">
-          Experience a secure, adversarial-resistant testing platform inspired by professional examination standards. Features anti-cheat monitoring, server-side timer authority, and real-time grading.
-        </p>
+      </div>
 
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-24">
-          <Link 
-            href="/login" 
-            className="w-full sm:w-auto px-8 py-4 bg-white text-slate-950 font-bold rounded-xl hover:bg-slate-200 transition-all shadow-xl shadow-white/10 active:scale-95"
-          >
-            Student Login
-          </Link>
-          <Link 
-            href="/login" 
-            className="w-full sm:w-auto px-8 py-4 bg-white/5 border border-white/10 font-bold rounded-xl hover:bg-white/10 transition-all active:scale-95"
-          >
-            Admin Dashboard
-          </Link>
-        </div>
+      <main className="relative">
+        {/* Banner Section */}
+        <section className="bg-jamb-green pt-20 pb-40 text-white text-center relative overflow-hidden">
+          <div className="absolute inset-0 opacity-10 pointer-events-none">
+            <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
+          </div>
+          <div className="max-w-4xl mx-auto px-6 relative z-10">
+            <h1 className="text-5xl md:text-6xl font-black tracking-tight mb-6 uppercase">
+              Service Excellence <br /> <span className="text-jamb-gold">Integrity</span>
+            </h1>
+            <p className="text-lg text-white/80 font-medium mb-12 max-w-2xl mx-auto leading-relaxed">
+              The standardized Computer-Based Testing platform for academic institutions. Secure, Reliable, and Authoritative.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link 
+                href="/login" 
+                className="w-full sm:w-auto px-10 py-5 bg-jamb-gold text-jamb-green font-black rounded-xl hover:bg-white transition-all shadow-xl shadow-black/20"
+              >
+                ACCESS CANDIDATE PORTAL
+              </Link>
+              <Link 
+                href="/login" 
+                className="w-full sm:w-auto px-10 py-5 bg-white/10 border-2 border-white/20 font-black rounded-xl hover:bg-white/20 transition-all"
+              >
+                ADMINISTRATION
+              </Link>
+            </div>
+          </div>
+        </section>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
-          <div className="p-8 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
-            <div className="w-12 h-12 bg-blue-600/20 rounded-xl flex items-center justify-center mb-6 text-blue-500">
-              🛡️
+        {/* Feature Grid */}
+        <section className="max-w-7xl mx-auto px-6 -mt-20 relative z-10 pb-20">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="portal-card p-10 h-full flex flex-col">
+              <div className="w-16 h-16 bg-green-50 text-jamb-green rounded-2xl flex items-center justify-center text-3xl mb-8 border border-green-100">
+                🛡️
+              </div>
+              <h3 className="text-xl font-black mb-4 uppercase tracking-tight">Zero Tolerance</h3>
+              <p className="text-slate-500 text-sm leading-relaxed mb-8 flex-grow">
+                Our anti-cheat nodes monitor every browser action. Fullscreen enforcement and activity logging ensure a clean examination environment.
+              </p>
+              <div className="h-1 w-12 bg-jamb-green/20 rounded-full"></div>
             </div>
-            <h3 className="text-xl font-bold mb-3">Anti-Cheat System</h3>
-            <p className="text-slate-400 text-sm leading-relaxed">
-              Proprietary violation detection including tab-switch monitoring and fullscreen enforcement with auto-submission capabilities.
-            </p>
-          </div>
-          <div className="p-8 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
-            <div className="w-12 h-12 bg-purple-600/20 rounded-xl flex items-center justify-center mb-6 text-purple-500">
-              ⚡
+            <div className="portal-card p-10 h-full flex flex-col">
+              <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-3xl mb-8 border border-blue-100">
+                ⌛
+              </div>
+              <h3 className="text-xl font-black mb-4 uppercase tracking-tight">Server Authority</h3>
+              <p className="text-slate-500 text-sm leading-relaxed mb-8 flex-grow">
+                Real-time server-side timer synchronization eliminates client-side bypass attempts. Sessions auto-terminate upon expiration.
+              </p>
+              <div className="h-1 w-12 bg-blue-600/20 rounded-full"></div>
             </div>
-            <h3 className="text-xl font-bold mb-3">Server-Side Authority</h3>
-            <p className="text-slate-400 text-sm leading-relaxed">
-              Zero-trust architecture. Timers, grading, and question randomization are all handled securely on the server.
-            </p>
-          </div>
-          <div className="p-8 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
-            <div className="w-12 h-12 bg-emerald-600/20 rounded-xl flex items-center justify-center mb-6 text-emerald-500">
-              📊
+            <div className="portal-card p-10 h-full flex flex-col">
+              <div className="w-16 h-16 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center text-3xl mb-8 border border-amber-100">
+                📊
+              </div>
+              <h3 className="text-xl font-black mb-4 uppercase tracking-tight">Instant Audit</h3>
+              <p className="text-slate-500 text-sm leading-relaxed mb-8 flex-grow">
+                Automated grading and performance analytics available instantly after submission. Detailed audit logs for admin review.
+              </p>
+              <div className="h-1 w-12 bg-amber-600/20 rounded-full"></div>
             </div>
-            <h3 className="text-xl font-bold mb-3">Instant Results</h3>
-            <p className="text-slate-400 text-sm leading-relaxed">
-              Automated grading and analytics provides students with instant feedback and admins with comprehensive performance reports.
-            </p>
           </div>
-        </div>
+        </section>
+
+        {/* Informational Section */}
+        <section className="bg-white border-t border-slate-100 py-20">
+          <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            <div>
+              <h2 className="text-4xl font-black tracking-tight mb-8 text-jamb-green uppercase">
+                A Unified Gateway for <br /> Future Success.
+              </h2>
+              <div className="space-y-6">
+                {[
+                  "Secure Biometric-linked Authentication Support",
+                  "Cross-platform Compatibility (Chrome, Firefox, Safari)",
+                  "Low-latency Real-time Data Synchronization",
+                  "Automated Results Verification System"
+                ].map((item, i) => (
+                  <div key={i} className="flex items-start gap-4">
+                    <div className="mt-1 w-5 h-5 rounded-full bg-jamb-green text-white flex items-center justify-center text-[10px]">✓</div>
+                    <p className="font-bold text-slate-700">{item}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="bg-slate-100 rounded-[2.5rem] p-4 border border-slate-200 shadow-inner group">
+              <div className="bg-white rounded-[2rem] p-12 shadow-sm flex flex-col items-center text-center group-hover:scale-[1.01] transition-transform">
+                <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center text-4xl mb-6">🏛️</div>
+                <h4 className="text-2xl font-black mb-4">Official Verification</h4>
+                <p className="text-slate-500 text-sm mb-8 leading-relaxed">
+                  All examinations conducted on this platform are monitored by the institutional academic board. 
+                </p>
+                <Link href="/login" className="px-8 py-4 bg-jamb-green text-white font-black rounded-xl hover:bg-green-800 transition-all">
+                  START VERIFICATION
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
 
-      <footer className="relative z-10 border-t border-white/5 py-12">
-        <div className="max-w-7xl mx-auto px-6 text-center text-slate-500 text-sm font-medium">
-          &copy; {new Date().getFullYear()} CBT Exam Platform. Designed for Academic Excellence.
-        </div>
+      <footer className="bg-slate-900 h-20 flex items-center justify-center">
+        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500">
+          &copy; {new Date().getFullYear()} JOINED ADMISSIONS AND MATRICULATION BOARD — PROTECTED SYSTEM
+        </p>
       </footer>
+
+      <style jsx global>{`
+        @keyframes marquee {
+          0% { transform: translateX(100%); }
+          100% { transform: translateX(-100%); }
+        }
+        .animate-marquee {
+          animation: marquee 30s linear infinite;
+        }
+      `}</style>
     </div>
   );
 }

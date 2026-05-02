@@ -1,59 +1,50 @@
+'use client';
+
 interface QuestionCardProps {
   question: {
     id: string;
     questionText: string;
     options: Record<string, string>;
     marks: number;
-    image?: string;
   };
-  selectedAnswer: string | null;
-  onAnswer: (answer: string) => void;
-  isFlagged: boolean;
-  onToggleFlag: () => void;
+  selected: string | null;
+  onChange: (val: string) => void;
 }
 
 export default function QuestionCard({
   question,
-  selectedAnswer,
-  onAnswer,
+  selected,
+  onChange,
 }: QuestionCardProps) {
   return (
-    <div className="glass-card p-10 rounded-[2.5rem]">
-      <div className="mb-10">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="px-3 py-1 bg-blue-600/20 text-blue-400 rounded-full text-[10px] font-black uppercase tracking-widest">
-            {question.marks} POINT{question.marks !== 1 ? 'S' : ''}
-          </div>
-        </div>
-        <h2 className="text-2xl md:text-3xl font-extrabold leading-tight text-white">
+    <div className="bg-white border-2 border-slate-200 rounded-[2rem] p-8 md:p-12 shadow-sm">
+      <div className="mb-10 min-h-[140px] flex flex-col justify-center border-b-2 border-slate-50 pb-10">
+        <h2 className="text-2xl md:text-4xl font-extrabold leading-[1.3] text-slate-800 tracking-tight">
           {question.questionText}
         </h2>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {Object.entries(question.options).map(([key, value]) => (
           <button
             key={key}
-            onClick={() => onAnswer(key)}
-            className={`flex items-center gap-4 p-6 rounded-3xl border-2 text-left transition-all group ${
-              selectedAnswer === key 
-              ? 'border-blue-600 bg-blue-600/10 text-white shadow-lg shadow-blue-600/10' 
-              : 'border-white/5 bg-white/5 text-slate-400 hover:border-white/20 hover:bg-white/10 hover:text-white'
+            onClick={() => onChange(key)}
+            className={`flex items-center gap-6 p-6 md:p-8 rounded-[1.5rem] border-4 text-left transition-all active:scale-[0.98] group ${
+              selected === key 
+              ? 'border-jamb-green bg-green-50/50 shadow-md ring-4 ring-green-100' 
+              : 'border-slate-100 bg-slate-50/50 text-slate-600 hover:border-jamb-green/40 hover:bg-white'
             }`}
           >
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm flex-shrink-0 transition-colors ${
-              selectedAnswer === key 
-              ? 'bg-blue-600 text-white' 
-              : 'bg-white/5 text-slate-500 group-hover:bg-white/20 group-hover:text-white'
+            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center font-black text-xl flex-shrink-0 transition-all ${
+              selected === key 
+              ? 'bg-jamb-green text-white shadow-lg rotate-3' 
+              : 'bg-white border-2 border-slate-200 text-slate-400 group-hover:text-jamb-green group-hover:border-jamb-green/40'
             }`}>
               {key}
             </div>
-            <span className="font-semibold text-lg">{value}</span>
-            {selectedAnswer === key && (
-              <div className="ml-auto w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-white text-[10px] animate-in zoom-in duration-300">
-                ✓
-              </div>
-            )}
+            <span className={`font-bold text-lg md:text-xl ${selected === key ? 'text-jamb-green' : 'text-slate-700'}`}>
+              {value}
+            </span>
           </button>
         ))}
       </div>

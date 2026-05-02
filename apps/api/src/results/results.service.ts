@@ -45,9 +45,33 @@ export class ResultsService {
       throw new NotFoundException('Submission not found');
     }
 
+    // Student can only view their own results
     if (requestingUser.role === 'student') {
       if (submission.student.id !== requestingUser.id) {
         throw new ForbiddenException('Not authorized');
+      }
+    }
+
+    // Teacher can only view results for exams they created
+    if (requestingUser.role === 'teacher') {
+      if (submission.exam.createdBy?.id !== requestingUser.id) {
+        throw new ForbiddenException('You can only view results for your own exams');
+      }
+    }
+
+    // Parent can only view results for linked students
+    if (requestingUser.role === 'parent') {
+      const isLinked = await this.submissionRepo.manager
+        .createQueryBuilder()
+        .select('1')
+        .from('parent_students', 'ps')
+        .where('ps.parentId = :parentId', { parentId: requestingUser.id })
+        .andWhere('ps.studentId = :studentId', { studentId: submission.student.id })
+        .andWhere('ps.isActive = true')
+        .getRawOne();
+
+      if (!isLinked) {
+        throw new ForbiddenException('Not linked to this student');
       }
     }
 
@@ -66,7 +90,8 @@ export class ResultsService {
       autoSubmitted: submission.autoSubmitted,
     };
 
-    if (requestingUser.role === 'admin') {
+    // Admin and Super Admin can see full details
+    if (['super_admin', 'administrator'].includes(requestingUser.role)) {
       return {
         ...baseResult,
         answers: submission.answers,
@@ -77,14 +102,21 @@ export class ResultsService {
     return baseResult;
   }
 
-  async getAllResults(): Promise<any[]> {
-    const submissions = await this.submissionRepo
+  async getAllResults(requestingUser?: any): Promise<any[]> {
+    const query = this.submissionRepo
       .createQueryBuilder('s')
       .innerJoinAndSelect('s.exam', 'e')
       .innerJoinAndSelect('s.student', 'u')
-      .andWhere('s.status != :status', { status: 'in_progress' })
-      .orderBy('s.submittedAt', 'DESC')
-      .getMany();
+      .andWhere('s.status != :status', { status: 'in_progress' });
+
+    // Teachers can only see results for exams they created
+    if (requestingUser && requestingUser.role === 'teacher') {
+      query.andWhere('e.createdById = :teacherId', { teacherId: requestingUser.id });
+    }
+
+    query.orderBy('s.submittedAt', 'DESC');
+
+    const submissions = await query.getMany();
 
     return submissions.map(s => ({
       submissionId: s.id,
@@ -100,15 +132,22 @@ export class ResultsService {
     }));
   }
 
-  async getResultsByExam(examId: string): Promise<any[]> {
-    const submissions = await this.submissionRepo
+  async getResultsByExam(examId: string, requestingUser?: any): Promise<any[]> {
+    const query = this.submissionRepo
       .createQueryBuilder('s')
       .innerJoinAndSelect('s.exam', 'e')
       .innerJoinAndSelect('s.student', 'u')
       .where('s.examId = :examId', { examId })
-      .andWhere('s.status != :status', { status: 'in_progress' })
-      .orderBy('s.submittedAt', 'DESC')
-      .getMany();
+      .andWhere('s.status != :status', { status: 'in_progress' });
+
+    // Teachers can only see results for exams they created
+    if (requestingUser && requestingUser.role === 'teacher') {
+      query.andWhere('e.createdById = :teacherId', { teacherId: requestingUser.id });
+    }
+
+    query.orderBy('s.submittedAt', 'DESC');
+
+    const submissions = await query.getMany();
 
     return submissions.map(s => ({
       submissionId: s.id,

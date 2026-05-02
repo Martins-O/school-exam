@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { Exclude } from 'class-transformer';
 
 @Entity('users')
@@ -16,8 +16,15 @@ export class User {
   @Exclude()
   password: string;
 
-  @Column({ type: 'enum', enum: ['student', 'admin'], default: 'student' })
-  role: 'student' | 'admin';
+  @Column({ type: 'enum', enum: ['super_admin', 'administrator', 'teacher', 'student', 'parent'], default: 'student' })
+  role: 'super_admin' | 'administrator' | 'teacher' | 'student' | 'parent';
+
+  @ManyToOne(() => User, { nullable: true })
+  @JoinColumn({ name: 'createdById' })
+  createdBy: User;
+
+  @Column({ nullable: true })
+  createdById: string;
 
   @Column({ default: true })
   isActive: boolean;

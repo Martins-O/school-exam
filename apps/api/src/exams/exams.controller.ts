@@ -8,13 +8,24 @@ import { UpdateExamDto } from './dto/update-exam.dto';
 
 @Controller('exams')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('admin')
+@Roles('super_admin', 'administrator')
 export class ExamsController {
   constructor(private readonly examsService: ExamsService) {}
 
   @Post()
   async create(@Body() dto: CreateExamDto, @Req() req) {
     return this.examsService.create(dto, req.user);
+  }
+
+  @Patch(':id')
+  async update(@Param('id') id: string, @Body() dto: UpdateExamDto, @Req() req) {
+    return this.examsService.update(id, dto, req.user);
+  }
+
+  @Delete(':id')
+  async remove(@Param('id') id: string, @Req() req) {
+    await this.examsService.remove(id, req.user);
+    return { message: 'Exam deleted successfully' };
   }
 
   @Get()
@@ -25,17 +36,6 @@ export class ExamsController {
   @Get(':id')
   async findOne(@Param('id') id: string) {
     return this.examsService.findOne(id);
-  }
-
-  @Patch(':id')
-  async update(@Param('id') id: string, @Body() dto: UpdateExamDto) {
-    return this.examsService.update(id, dto);
-  }
-
-  @Delete(':id')
-  async remove(@Param('id') id: string) {
-    await this.examsService.remove(id);
-    return { message: 'Exam deleted successfully' };
   }
 
   @Patch(':id/publish')

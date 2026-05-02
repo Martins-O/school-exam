@@ -27,7 +27,8 @@ export class UsersService {
     name: string;
     email: string;
     password: string;
-    role?: 'student' | 'admin';
+    role?: 'super_admin' | 'administrator' | 'teacher' | 'student' | 'parent';
+    createdById?: string;
   }): Promise<User> {
     const existingUser = await this.findByEmail(data.email);
     if (existingUser) {
@@ -41,8 +42,29 @@ export class UsersService {
       email: data.email,
       password: hashedPassword,
       role: data.role || 'student',
+      createdById: data.createdById,
     });
 
     return this.userRepository.save(user);
+  }
+
+  async createByAdmin(adminId: string, data: {
+    name: string;
+    email: string;
+    password: string;
+    role: 'super_admin' | 'administrator' | 'teacher' | 'student' | 'parent';
+  }): Promise<User> {
+    return this.create({
+      ...data,
+      createdById: adminId,
+    });
+  }
+
+  async findAll(role?: string): Promise<User[]> {
+    const query = this.userRepository.createQueryBuilder('user');
+    if (role) {
+      query.where('user.role = :role', { role });
+    }
+    return query.getMany();
   }
 }

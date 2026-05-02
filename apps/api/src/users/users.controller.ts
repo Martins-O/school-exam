@@ -1,43 +1,62 @@
-import { Controller, Post, Get, Body, UseGuards, Delete, Param } from '@nestjs/common';
+import { Controller, Post, Body, Get, UseGuards, Request, ForbiddenException, Query } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { User } from './entities/user.entity';
+import { CreateUserDto } from './dto/create-user.dto';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('admin')
 export class UsersController {
-  constructor(
-    private readonly usersService: UsersService,
-    @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
-  ) {}
-
-  @Get()
-  async findAll() {
-    return this.userRepository.find({
-      order: { createdAt: 'DESC' },
-      select: ['id', 'name', 'email', 'role', 'isActive', 'createdAt'],
-    });
-  }
+  constructor(private readonly usersService: UsersService) {}
 
   @Post()
-  async create(@Body() body: any) {
-    return this.usersService.create({
-      name: body.name,
-      email: body.email,
-      password: body.password,
-      role: body.role,
+  @Roles('super_admin', 'administrator')
+  async createUser(@Request() req, @Body() createUserDto: CreateUserDto) {
+    const allowedRoles: string[] = ['super_admin', 'administrator', 'teacher', 'student', 'parent'];
+
+    if (!allowedRoles.includes(createUserDto.role)) {
+      throw new ForbiddenException('Invalid role specified');
+    }
+
+    // Only super_admin can create super_admin accounts
+    if (createUserDto.role === 'super_admin' && req.user.role !== 'super_admin') {
+      throw new ForbiddenException('Only super admins can create super admin accounts');
+    }
+
+    const user = await this.usersService.createByAdmin(req.user.id, {
+      name: createUserDto.name,
+      email: createUserDto.email,
+      password: createUserDto.password,
+      role: createUserDto.role,
     });
+
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      createdAt: user.createdAt,
+    };
   }
 
-  @Delete(':id')
-  async remove(@Param('id') id: string) {
-    await this.userRepository.delete(id);
-    return { message: 'User deleted' };
+  @Get()
+  @Roles('super_admin', 'administrator')
+  async getUsers(@Query('role') role?: string) {
+    const users = await this.usersService.findAll(role);
+    return users.map(user => ({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      isActive: user.isActive,
+      createdAt: user.createdAt,
+    }));
+  }
+
+  @Get('me')
+  @Roles('super_admin', 'administrator', 'teacher', 'student', 'parent')
+  async getProfile(@Request() req) {
+    return this.usersService.findById(req.user.id);
   }
 }

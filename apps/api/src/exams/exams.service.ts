@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Exam } from './entities/exam.entity';
@@ -40,14 +40,26 @@ export class ExamsService {
     return exam;
   }
 
-  async update(id: string, dto: UpdateExamDto): Promise<Exam> {
+  async update(id: string, dto: UpdateExamDto, user?: any): Promise<Exam> {
     const exam = await this.findOne(id);
+
+    // Teachers can only update their own exams
+    if (user && user.role === 'teacher' && exam.createdBy.id !== user.id) {
+      throw new ForbiddenException('You can only modify your own exams');
+    }
+
     Object.assign(exam, dto);
     return this.examRepository.save(exam);
   }
 
-  async remove(id: string): Promise<void> {
+  async remove(id: string, user?: any): Promise<void> {
     const exam = await this.findOne(id);
+
+    // Teachers can only delete their own exams
+    if (user && user.role === 'teacher' && exam.createdBy.id !== user.id) {
+      throw new ForbiddenException('You can only delete your own exams');
+    }
+
     await this.examRepository.remove(exam);
   }
 

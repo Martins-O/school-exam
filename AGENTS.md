@@ -203,8 +203,15 @@ export class User {
   @Column()
   password: string; // bcrypt hash, never plaintext
 
-  @Column({ type: 'enum', enum: ['student', 'admin'], default: 'student' })
-  role: 'student' | 'admin';
+  @Column({ type: 'enum', enum: ['super_admin', 'administrator', 'teacher', 'student', 'parent'], default: 'student' })
+  role: 'super_admin' | 'administrator' | 'teacher' | 'student' | 'parent';
+
+  @ManyToOne(() => User, { nullable: true })
+  @JoinColumn({ name: 'createdById' })
+  createdBy: User;
+
+  @Column({ nullable: true })
+  createdById: string;
 
   @Column({ default: true })
   isActive: boolean;
@@ -456,9 +463,17 @@ All routes are prefixed with `/api/v1`. Auth routes require no token. All other 
 | Method | Path | Guard | Description |
 |---|---|---|---|
 | GET | `/results/my` | JWT + Student | Student's own past submissions |
-| GET | `/results/:submissionId` | JWT | Get a specific result (student sees own only, admin sees all) |
-| GET | `/admin/results` | JWT + Admin | All submissions across all exams |
-| GET | `/admin/results/exam/:examId` | JWT + Admin | All submissions for a specific exam |
+| GET | `/results/:submissionId` | JWT + Student/Parent | Get a specific result (student sees own only, admin/teacher see all, parent sees linked students only) |
+| GET | `/admin/results` | JWT + Super Admin/Administrator | All submissions across all exams |
+| GET | `/admin/results/exam/:examId` | JWT + Super Admin/Administrator/Teacher | All submissions for a specific exam (teachers only see own exams) |
+
+### Users (New)
+
+| Method | Path | Guard | Description |
+|---|---|---|---|
+| POST | `/users` | JWT + Super Admin/Administrator | Create user with role (admin only) |
+| GET | `/users` | JWT + Super Admin/Administrator | List users (filtered by role) |
+| GET | `/users/me` | JWT + All Roles | Get current user profile |
 
 ---
 
@@ -630,21 +645,41 @@ JwtModule.registerAsync({
 interface JwtPayload {
   sub: string;      // user.id (UUID)
   email: string;
-  role: 'student' | 'admin';
+  role: 'super_admin' | 'administrator' | 'teacher' | 'student' | 'parent';
   iat: number;
   exp: number;
 }
 ```
+
+### Role Hierarchy
+
+| Role | Permissions |
+|------|-------------|
+| `super_admin` | Full system access, manage all users including admins |
+| `administrator` | Manage teachers, students, classes, all exams |
+| `teacher` | Create exams, manage questions, view own exam results |
+| `student` | Take exams, view own results |
+| `parent` | View results/transcripts of linked students only |
 
 ### Roles Guard
 
 ```typescript
 // Apply to any controller or handler:
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('admin')
+@Roles('super_admin', 'administrator')
 ```
 
 The `RolesGuard` reads the role from `req.user.role` (populated by `JwtStrategy`). Throw `ForbiddenException` if role does not match.
+
+**Teacher restrictions:**
+- Teachers can only modify their own exams/questions
+- Teachers can only view results for exams they created
+- Teachers must be assigned to classes by administrators
+
+**Parent restrictions:**
+- Parents can ONLY view results/transcripts of linked students
+- Parents have NO access to exams, questions, classes, or any other feature
+- All parent endpoints must validate the parent-student link
 
 ### Password requirements
 
@@ -654,7 +689,14 @@ The `RolesGuard` reads the role from `req.user.role` (populated by `JwtStrategy`
 
 ### Register endpoint
 
-Registration is open (any user can register). Role defaults to `'student'`. Admin accounts are created manually or via a seeder — never via the public register endpoint.
+Registration is open (any user can register). Role defaults to `'student'`. 
+
+**Admin/Teacher account creation:**
+- Only Super Admins and Administrators can create users with roles
+- `POST /users` endpoint for admin user creation
+- Created users are linked to their creator via `createdById` field
+- Teachers must be assigned to classes by administrators
+- Parents must be linked to students by administrators
 
 ---
 

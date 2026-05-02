@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Question } from './entities/question.entity';
@@ -15,10 +15,18 @@ export class QuestionsService {
     private readonly examRepository: Repository<Exam>,
   ) {}
 
-  async create(examId: string, dto: CreateQuestionDto): Promise<Question> {
-    const exam = await this.examRepository.findOne({ where: { id: examId } });
+  async create(examId: string, dto: CreateQuestionDto, user?: any): Promise<Question> {
+    const exam = await this.examRepository.findOne({
+      where: { id: examId },
+      relations: ['createdBy'],
+    });
     if (!exam) {
       throw new NotFoundException('Exam not found');
+    }
+
+    // Teachers can only add questions to their own exams
+    if (user && user.role === 'teacher' && exam.createdBy.id !== user.id) {
+      throw new ForbiddenException('You can only add questions to your own exams');
     }
 
     const question = this.questionRepository.create({
@@ -45,14 +53,26 @@ export class QuestionsService {
     return question;
   }
 
-  async update(examId: string, id: string, dto: UpdateQuestionDto): Promise<Question> {
+  async update(examId: string, id: string, dto: UpdateQuestionDto, user?: any): Promise<Question> {
     const question = await this.findOne(examId, id);
+
+    // Teachers can only update questions in their own exams
+    if (user && user.role === 'teacher' && question.exam.createdBy.id !== user.id) {
+      throw new ForbiddenException('You can only modify questions in your own exams');
+    }
+
     Object.assign(question, dto);
     return this.questionRepository.save(question);
   }
 
-  async remove(examId: string, id: string): Promise<void> {
+  async remove(examId: string, id: string, user?: any): Promise<void> {
     const question = await this.findOne(examId, id);
+
+    // Teachers can only delete questions from their own exams
+    if (user && user.role === 'teacher' && question.exam.createdBy.id !== user.id) {
+      throw new ForbiddenException('You can only delete questions from your own exams');
+    }
+
     await this.questionRepository.remove(question);
   }
 }

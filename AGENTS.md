@@ -1277,12 +1277,12 @@ Build in this exact order. Do not skip ahead. Each phase depends on the previous
 - [x] Transcript pages (admin generation, student/parent viewing)
 - [x] Classes management page (admin)
 
-### Phase 12 — Hardening
-- [ ] Rate limiting on autosave and login
-- [ ] Helmet + CORS config
-- [ ] Global exception filter
-- [ ] Input validation on all DTOs
-- [ ] End-to-end test: start → autosave × 3 → submit → verify score
+### Phase 12 — Hardening ✅
+- [x] Rate limiting on autosave (30 req/min) and login (10 req/min)
+- [x] Helmet + CORS config
+- [x] Global exception filter
+- [x] Input validation on all DTOs
+- [x] End-to-end test: start → autosave × 3 → submit → verify score (10 tests passing)
 
 ---
 

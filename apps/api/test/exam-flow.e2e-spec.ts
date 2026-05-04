@@ -27,7 +27,7 @@ describe('Exam Flow (e2e)', () => {
     await app.init();
 
     dataSource = app.get(DataSource);
-    // Cleanup DB before test (Optional, but safer)
+    // Cleanup DB before test
     await dataSource.query('TRUNCATE TABLE submissions CASCADE');
     await dataSource.query('TRUNCATE TABLE questions CASCADE');
     await dataSource.query('TRUNCATE TABLE exams CASCADE');
@@ -43,17 +43,17 @@ describe('Exam Flow (e2e)', () => {
       .post('/api/v1/auth/register')
       .send({
         name: 'Admin User',
-        email: 'admin@test.com',
+        email: 'admin_e2e@test.com',
         password: 'password123',
       });
     expect(res.status).toBe(201);
     
-    // Manually promote to admin since register defaults to student
-    await dataSource.query("UPDATE users SET role = 'admin' WHERE email = 'admin@test.com'");
+    // Manually promote to super_admin since register defaults to student
+    await dataSource.query("UPDATE users SET role = 'super_admin' WHERE email = 'admin_e2e@test.com'");
 
     const loginRes = await request(app.getHttpServer())
       .post('/api/v1/auth/login')
-      .send({ email: 'admin@test.com', password: 'password123' });
+      .send({ email: 'admin_e2e@test.com', password: 'password123' });
     adminToken = loginRes.body.accessToken;
   });
 
@@ -100,13 +100,13 @@ describe('Exam Flow (e2e)', () => {
       .post('/api/v1/auth/register')
       .send({
         name: 'Student User',
-        email: 'student@test.com',
+        email: 'student_e2e@test.com',
         password: 'password123',
       });
 
     const loginRes = await request(app.getHttpServer())
       .post('/api/v1/auth/login')
-      .send({ email: 'student@test.com', password: 'password123' });
+      .send({ email: 'student_e2e@test.com', password: 'password123' });
     studentToken = loginRes.body.accessToken;
   });
 
@@ -122,25 +122,27 @@ describe('Exam Flow (e2e)', () => {
 
   it('Step 7: Autosave x3 (Student)', async () => {
     // Save Q1
-    await request(app.getHttpServer())
+    const res1 = await request(app.getHttpServer())
       .patch(`/api/v1/submissions/${submissionId}/autosave`)
       .set('Authorization', `Bearer ${studentToken}`)
       .send({ answers: { [questionIds[0]]: 'A' } });
+    expect(res1.status).toBe(200);
 
     // Save Q2
-    await request(app.getHttpServer())
+    const res2 = await request(app.getHttpServer())
       .patch(`/api/v1/submissions/${submissionId}/autosave`)
       .set('Authorization', `Bearer ${studentToken}`)
       .send({ answers: { [questionIds[1]]: 'B' } });
+    expect(res2.status).toBe(200);
 
-    // Save Flag
-    const res = await request(app.getHttpServer())
+    // Save Flag + Q3 wrong answer
+    const res3 = await request(app.getHttpServer())
       .patch(`/api/v1/submissions/${submissionId}/autosave`)
       .set('Authorization', `Bearer ${studentToken}`)
-      .send({ flaggedQuestions: [questionIds[2]] });
+      .send({ flaggedQuestions: [questionIds[2]], answers: { [questionIds[2]]: 'D' } });
       
-    expect(res.status).toBe(200);
-    expect(res.body.remainingSeconds).toBeGreaterThan(0);
+    expect(res3.status).toBe(200);
+    expect(res3.body.remainingSeconds).toBeGreaterThan(0);
   });
 
   it('Step 8: Final Submit (Student)', async () => {
@@ -148,13 +150,14 @@ describe('Exam Flow (e2e)', () => {
       .post(`/api/v1/submissions/${submissionId}/submit`)
       .set('Authorization', `Bearer ${studentToken}`)
       .send({
-        answers: { [questionIds[2]]: 'D' }, // Wrong answer for Q3
+        answers: {}, // Already saved in autosave
       });
     
     expect(res.status).toBe(201);
     // Q1 correct (2), Q2 correct (2), Q3 wrong (0) = 4 marks out of 6
     expect(res.body.score).toBe(4);
     expect(res.body.totalMarks).toBe(6);
+    expect(res.body.percentage).toBeCloseTo(66.67, 1);
   });
 
   it('Step 9: Verify Result (Student)', async () => {
@@ -165,5 +168,13 @@ describe('Exam Flow (e2e)', () => {
     expect(res.status).toBe(200);
     expect(res.body.score).toBe(4);
     expect(res.body.status).toBe('submitted');
+  });
+
+  it('Step 10: Cannot start exam twice (Student)', async () => {
+    const res = await request(app.getHttpServer())
+      .post(`/api/v1/submissions/start/${examId}`)
+      .set('Authorization', `Bearer ${studentToken}`);
+    
+    expect(res.status).toBe(409);
   });
 });

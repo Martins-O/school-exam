@@ -5,6 +5,7 @@ import { Roles } from '../auth/roles.decorator';
 import { ExamsService } from './exams.service';
 import { CreateExamDto } from './dto/create-exam.dto';
 import { UpdateExamDto } from './dto/update-exam.dto';
+import { AssignClassesDto } from './dto/assign-classes.dto';
 
 @Controller('exams')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -44,7 +45,7 @@ export class ExamsController {
   }
 
   @Patch(':id/classes')
-  async assignClasses(@Param('id') id: string, @Body() dto: { classIds: string[] }, @Req() req) {
+  async assignClasses(@Param('id') id: string, @Body() dto: AssignClassesDto, @Req() req) {
     await this.examsService.assignClasses(id, dto.classIds, req.user);
     return { message: 'Classes assigned to exam successfully' };
   }

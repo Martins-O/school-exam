@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsArray, Length } from 'class-validator';
+import { IsString, IsOptional, IsArray, Length, IsObject, IsInt, Min } from 'class-validator';
 
 export class UpdateQuestionDto {
   @IsOptional()
@@ -7,12 +7,17 @@ export class UpdateQuestionDto {
   questionText?: string;
 
   @IsOptional()
+  @IsObject()
   options?: Record<string, string>;
 
   @IsOptional()
+  @IsString()
+  @Length(1, 1)
   correctAnswer?: string;
 
   @IsOptional()
+  @IsInt()
+  @Min(1)
   marks?: number;
 
   @IsOptional()

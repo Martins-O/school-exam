@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsArray, IsEnum, Length } from 'class-validator';
+import { IsString, IsOptional, IsArray, IsEnum, Length, IsObject, IsInt, Min } from 'class-validator';
 
 export class CreateQuestionDto {
   @IsString()
@@ -6,13 +6,16 @@ export class CreateQuestionDto {
   questionText: string;
 
   @IsString()
-  @IsEnum(['A', 'B', 'C', 'D', 'E', 'F'])
+  @Length(1, 1)
   correctAnswer: string;
 
   @IsOptional()
+  @IsObject()
   options?: Record<string, string>;
 
   @IsOptional()
+  @IsInt()
+  @Min(1)
   marks?: number;
 
   @IsOptional()

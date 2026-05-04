@@ -5,6 +5,7 @@ import { Roles } from '../auth/roles.decorator';
 import { QuestionsService } from './questions.service';
 import { CreateQuestionDto } from './dto/create-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
+import { BulkImportDto } from './dto/bulk-import.dto';
 
 @Controller('exams/:examId/questions')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -45,7 +46,7 @@ export class QuestionsController {
   @SerializeOptions({ groups: ['admin'] })
   async bulkImport(
     @Param('examId') examId: string,
-    @Body() dto: { questions: CreateQuestionDto[] },
+    @Body() dto: BulkImportDto,
     @Req() req,
   ) {
     return this.questionsService.bulkImport(examId, dto.questions, req.user);

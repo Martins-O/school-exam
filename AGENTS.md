@@ -256,11 +256,95 @@ export class Exam {
   @ManyToOne(() => User)
   createdBy: User;
 
+  @ManyToMany(() => Class)
+  @JoinTable()
+  targetClasses: Class[];
+
   @CreateDateColumn()
   createdAt: Date;
 
   @UpdateDateColumn()
   updatedAt: Date;
+}
+```
+
+### 4.2.1 classes
+
+```typescript
+@Entity('classes')
+export class Class {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column({ length: 100 })
+  name: string; // e.g., "Grade 10A", "JSS 2"
+
+  @Column({ type: 'text', nullable: true })
+  description: string;
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'createdById' })
+  createdBy: User;
+
+  @Column()
+  createdById: string;
+
+  @CreateDateColumn()
+  createdAt: Date;
+}
+```
+
+### 4.2.2 class_students
+
+```typescript
+@Entity('class_students')
+export class ClassStudent {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @ManyToOne(() => Class)
+  @JoinColumn({ name: 'classId' })
+  class: Class;
+
+  @Column()
+  classId: string;
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'studentId' })
+  student: User;
+
+  @Column()
+  studentId: string;
+
+  @CreateDateColumn()
+  enrolledAt: Date;
+}
+```
+
+### 4.2.3 teacher_classes
+
+```typescript
+@Entity('teacher_classes')
+export class TeacherClass {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @ManyToOne(() => Class)
+  @JoinColumn({ name: 'classId' })
+  class: Class;
+
+  @Column()
+  classId: string;
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'teacherId' })
+  teacher: User;
+
+  @Column()
+  teacherId: string;
+
+  @CreateDateColumn()
+  assignedAt: Date;
 }
 ```
 
@@ -379,6 +463,7 @@ export class Submission {
 | `QuestionsModule` | Question CRUD under an exam | Submissions, correct answers in student responses |
 | `SubmissionsModule` | Exam sessions, autosave, submit, grading, randomization | Exam metadata CRUD |
 | `ResultsModule` | Reading scores and submission details | Writing any data |
+| `ClassesModule` | Class management, student enrollment, teacher assignment | Exams, submissions |
 | `Gateway` | WebSocket events for admin live monitoring | Business logic |
 
 ### Global setup in `main.ts`
@@ -426,28 +511,49 @@ All routes are prefixed with `/api/v1`. Auth routes require no token. All other 
 
 | Method | Path | Guard | Description |
 |---|---|---|---|
-| POST | `/exams` | JWT + Admin | Create exam |
-| GET | `/exams` | JWT + Admin | List all exams |
-| GET | `/exams/:id` | JWT + Admin | Get exam detail |
-| PATCH | `/exams/:id` | JWT + Admin | Update exam |
-| DELETE | `/exams/:id` | JWT + Admin | Delete exam |
-| PATCH | `/exams/:id/publish` | JWT + Admin | Publish exam (make visible to students) |
+| POST | `/exams` | JWT + Super Admin/Administrator/Teacher | Create exam |
+| GET | `/exams` | JWT + Super Admin/Administrator | List all exams |
+| GET | `/exams/:id` | JWT + Super Admin/Administrator/Teacher | Get exam detail |
+| PATCH | `/exams/:id` | JWT + Super Admin/Administrator/Teacher | Update exam (teachers: own exams only) |
+| DELETE | `/exams/:id` | JWT + Super Admin/Administrator/Teacher | Delete exam (teachers: own exams only) |
+| PATCH | `/exams/:id/publish` | JWT + Super Admin/Administrator/Teacher | Publish exam (make visible to students) |
+| PATCH | `/exams/:id/classes` | JWT + Super Admin/Administrator/Teacher | Assign exam to classes (teachers: own classes only) |
 
 ### Questions (Admin)
 
 | Method | Path | Guard | Description |
 |---|---|---|---|
-| POST | `/exams/:examId/questions` | JWT + Admin | Add question to exam |
-| GET | `/exams/:examId/questions` | JWT + Admin | List all questions (includes correct answers) |
-| PATCH | `/exams/:examId/questions/:id` | JWT + Admin | Update question |
-| DELETE | `/exams/:examId/questions/:id` | JWT + Admin | Delete question |
+| POST | `/exams/:examId/questions` | JWT + Super Admin/Administrator/Teacher | Add question to exam |
+| GET | `/exams/:examId/questions` | JWT + Super Admin/Administrator/Teacher | List all questions (includes correct answers) |
+| PATCH | `/exams/:examId/questions/:id` | JWT + Super Admin/Administrator/Teacher | Update question |
+| DELETE | `/exams/:examId/questions/:id` | JWT + Super Admin/Administrator/Teacher | Delete question |
 
 ### Exams (Student)
 
 | Method | Path | Guard | Description |
 |---|---|---|---|
-| GET | `/student/exams` | JWT + Student | List available (published, within window) exams |
+| GET | `/student/exams` | JWT + Student | List available exams (published, within window, student's classes) |
 | GET | `/student/exams/:id` | JWT + Student | Get exam metadata (no questions, no answers) |
+
+### Classes (Admin)
+
+| Method | Path | Guard | Description |
+|---|---|---|---|
+| POST | `/classes` | JWT + Super Admin/Administrator | Create class |
+| GET | `/classes` | JWT + Super Admin/Administrator | List all classes |
+| GET | `/classes/:id` | JWT + Super Admin/Administrator | Get class detail |
+| GET | `/classes/:id/students` | JWT + Super Admin/Administrator | List students in class |
+| POST | `/classes/:id/students` | JWT + Super Admin/Administrator | Add student to class |
+| DELETE | `/classes/:id/students/:studentId` | JWT + Super Admin/Administrator | Remove student from class |
+| GET | `/classes/:id/teachers` | JWT + Super Admin/Administrator | List teachers in class |
+| POST | `/classes/:id/teachers` | JWT + Super Admin/Administrator | Assign teacher to class |
+| DELETE | `/classes/:id/teachers/:teacherId` | JWT + Super Admin/Administrator | Remove teacher from class |
+
+### Teacher (My Classes)
+
+| Method | Path | Guard | Description |
+|---|---|---|---|
+| GET | `/teacher/classes` | JWT + Teacher | List classes assigned to teacher |
 
 ### Exam Sessions (Student — Exam Engine)
 
@@ -488,6 +594,7 @@ Execute these steps **in order**, inside a **database transaction**:
 1. **Eligibility check** — verify:
    - Exam exists and `isPublished === true`
    - Current time is within `exam.startTime` and `exam.endTime` (if set)
+   - Student is enrolled in at least one of the exam's target classes (if exam has target classes)
    - No existing submission exists for this `(student, exam)` pair with status `in_progress`, `submitted`, `timed_out`, or `force_submitted`
    - If any check fails → throw `ForbiddenException` with a clear message
 

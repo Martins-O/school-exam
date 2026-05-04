@@ -9,12 +9,13 @@ import { SessionCleanupTask } from './tasks/session-cleanup.task';
 import { Exam } from '../exams/entities/exam.entity';
 import { Question } from '../questions/entities/question.entity';
 import { User } from '../users/entities/user.entity';
+import { ClassStudent } from '../classes/entities/class-student.entity';
 
 import { GatewayModule } from '../gateway/gateway.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Submission, Exam, Question, User]),
+    TypeOrmModule.forFeature([Submission, Exam, Question, User, ClassStudent]),
     GatewayModule,
   ],
   providers: [

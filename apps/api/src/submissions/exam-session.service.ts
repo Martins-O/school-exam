@@ -5,6 +5,7 @@ import { Submission } from './entities/submission.entity';
 import { Exam } from '../exams/entities/exam.entity';
 import { Question } from '../questions/entities/question.entity';
 import { User } from '../users/entities/user.entity';
+import { ClassStudent } from '../classes/entities/class-student.entity';
 import { RandomizerService } from './randomizer.service';
 import { GraderService } from './grader.service';
 import { ExamGateway } from '../gateway/exam.gateway';
@@ -18,6 +19,8 @@ export class ExamSessionService {
     private readonly examRepo: Repository<Exam>,
     @InjectRepository(Question)
     private readonly questionRepo: Repository<Question>,
+    @InjectRepository(ClassStudent)
+    private readonly classStudentRepo: Repository<ClassStudent>,
     private readonly randomizerService: RandomizerService,
     private readonly graderService: GraderService,
     private readonly examGateway: ExamGateway,
@@ -49,6 +52,29 @@ export class ExamSessionService {
     }
     if (exam.endTime && exam.endTime < now) {
       throw new ForbiddenException('Exam has ended');
+    }
+
+    // Verify student is in exam's target class (if exam has target classes)
+    const studentClasses = await this.classStudentRepo.find({
+      where: { studentId: student.id },
+      relations: ['class'],
+    });
+    const studentClassIds = new Set(studentClasses.map(sc => sc.classId));
+
+    if (studentClassIds.size > 0) {
+      const examWithClasses = await this.examRepo.findOne({
+        where: { id: examId },
+        relations: ['targetClasses'],
+      });
+
+      if (examWithClasses && examWithClasses.targetClasses && examWithClasses.targetClasses.length > 0) {
+        const examClassIds = examWithClasses.targetClasses.map(tc => tc.id);
+        const isEnrolled = examClassIds.some(id => studentClassIds.has(id));
+        
+        if (!isEnrolled) {
+          throw new ForbiddenException('You are not enrolled in any class assigned to this exam');
+        }
+      }
     }
 
     const existing = await this.submissionRepo.findOne({

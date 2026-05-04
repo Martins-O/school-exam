@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, ManyToMany, JoinTable } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
+import { Class } from '../../classes/entities/class.entity';
 
 @Entity('exams')
 export class Exam {
@@ -30,6 +31,10 @@ export class Exam {
   @ManyToOne(() => User)
   @JoinColumn()
   createdBy: User;
+
+  @ManyToMany(() => Class)
+  @JoinTable()
+  targetClasses: Class[];
 
   @CreateDateColumn()
   createdAt: Date;

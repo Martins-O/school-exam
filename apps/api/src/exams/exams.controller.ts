@@ -8,7 +8,7 @@ import { UpdateExamDto } from './dto/update-exam.dto';
 
 @Controller('exams')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('super_admin', 'administrator')
+@Roles('super_admin', 'administrator', 'teacher')
 export class ExamsController {
   constructor(private readonly examsService: ExamsService) {}
 
@@ -41,5 +41,11 @@ export class ExamsController {
   @Patch(':id/publish')
   async publish(@Param('id') id: string) {
     return this.examsService.publish(id);
+  }
+
+  @Patch(':id/classes')
+  async assignClasses(@Param('id') id: string, @Body() dto: { classIds: string[] }, @Req() req) {
+    await this.examsService.assignClasses(id, dto.classIds, req.user);
+    return { message: 'Classes assigned to exam successfully' };
   }
 }

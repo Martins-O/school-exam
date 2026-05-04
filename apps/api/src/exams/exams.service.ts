@@ -3,6 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Exam } from './entities/exam.entity';
 import { Question } from '../questions/entities/question.entity';
+import { Class } from '../classes/entities/class.entity';
+import { TeacherClass } from '../classes/entities/teacher-class.entity';
 import { CreateExamDto } from './dto/create-exam.dto';
 import { UpdateExamDto } from './dto/update-exam.dto';
 
@@ -13,6 +15,10 @@ export class ExamsService {
     private readonly examRepository: Repository<Exam>,
     @InjectRepository(Question)
     private readonly questionRepository: Repository<Question>,
+    @InjectRepository(Class)
+    private readonly classRepository: Repository<Class>,
+    @InjectRepository(TeacherClass)
+    private readonly teacherClassRepository: Repository<TeacherClass>,
   ) {}
 
   async create(dto: CreateExamDto, adminUser: any): Promise<Exam> {
@@ -77,5 +83,39 @@ export class ExamsService {
 
     exam.isPublished = true;
     return this.examRepository.save(exam);
+  }
+
+  async assignClasses(examId: string, classIds: string[], user: any): Promise<void> {
+    const exam = await this.examRepository.findOne({
+      where: { id: examId },
+      relations: ['targetClasses'],
+    });
+    if (!exam) {
+      throw new NotFoundException('Exam not found');
+    }
+
+    // Teachers can only assign classes they are assigned to
+    if (user.role === 'teacher') {
+      const teacherClasses = await this.teacherClassRepository.find({
+        where: { teacherId: user.id },
+        relations: ['class'],
+      });
+      const allowedClassIds = new Set(teacherClasses.map(tc => tc.classId));
+
+      for (const classId of classIds) {
+        if (!allowedClassIds.has(classId)) {
+          throw new ForbiddenException('You can only assign classes you are assigned to');
+        }
+      }
+    }
+
+    // Verify all classes exist
+    const classes = await this.classRepository.findByIds(classIds);
+    if (classes.length !== classIds.length) {
+      throw new NotFoundException('One or more classes not found');
+    }
+
+    exam.targetClasses = classes;
+    await this.examRepository.save(exam);
   }
 }

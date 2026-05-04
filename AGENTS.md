@@ -494,6 +494,7 @@ export class Submission {
 | `ResultsModule` | Reading scores and submission details | Writing any data |
 | `ClassesModule` | Class management, student enrollment, teacher assignment | Exams, submissions |
 | `CategoriesModule` | Question categories CRUD | Questions, submissions |
+| `ParentsModule` | Parent-student linking, parent result access | Exams, submissions |
 | `Gateway` | WebSocket events for admin live monitoring | Business logic |
 
 ### Global setup in `main.ts`
@@ -595,6 +596,14 @@ All routes are prefixed with `/api/v1`. Auth routes require no token. All other 
 | Method | Path | Guard | Description |
 |---|---|---|---|
 | GET | `/teacher/classes` | JWT + Teacher | List classes assigned to teacher |
+
+### Parent
+
+| Method | Path | Guard | Description |
+|---|---|---|---|
+| POST | `/parent/link-student` | JWT + Super Admin/Administrator | Link parent to student (admin-only action) |
+| GET | `/parent/my-students` | JWT + Parent | List students linked to the authenticated parent |
+| DELETE | `/parent/unlink/:studentId` | JWT + Super Admin/Administrator | Unlink parent from student |
 
 ### Exam Sessions (Student — Exam Engine)
 

@@ -15,6 +15,7 @@ import { SubmissionsModule } from './submissions/submissions.module';
 import { ResultsModule } from './results/results.module';
 import { ClassesModule } from './classes/classes.module';
 import { CategoriesModule } from './categories/categories.module';
+import { ParentsModule } from './parents/parents.module';
 import { GatewayModule } from './gateway/gateway.module';
 import { RequestLoggerMiddleware } from './common/middleware/request-logger.middleware';
 import { HealthController } from './health.controller';
@@ -70,6 +71,7 @@ import { HealthController } from './health.controller';
     ResultsModule,
     ClassesModule,
     CategoriesModule,
+    ParentsModule,
   ],
   controllers: [AppController, HealthController],
   providers: [

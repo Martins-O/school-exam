@@ -1,6 +1,7 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn, ManyToMany, JoinTable } from 'typeorm';
 import { Exclude, Expose } from 'class-transformer';
 import { Exam } from '../../exams/entities/exam.entity';
+import { QuestionCategory } from '../../categories/entities/question-category.entity';
 
 @Entity('questions')
 export class Question {
@@ -8,14 +9,13 @@ export class Question {
   id: string;
 
   @ManyToOne(() => Exam, { onDelete: 'CASCADE' })
-  @JoinColumn()
   exam: Exam;
 
   @Column({ type: 'text' })
   questionText: string;
 
   @Column({ type: 'jsonb' })
-  options: Record<'A' | 'B' | 'C' | 'D', string>;
+  options: Record<string, string>;
 
   @Column({ type: 'char', length: 1 })
   @Exclude()
@@ -27,6 +27,10 @@ export class Question {
 
   @Column({ type: 'int', default: 0 })
   orderIndex: number;
+
+  @ManyToMany(() => QuestionCategory)
+  @JoinTable()
+  categories: QuestionCategory[];
 
   @CreateDateColumn()
   createdAt: Date;

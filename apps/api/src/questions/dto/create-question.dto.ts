@@ -1,23 +1,22 @@
-import { IsString, MinLength, IsObject, IsIn, IsInt, Min, IsOptional } from 'class-validator';
+import { IsString, IsOptional, IsArray, IsEnum, Length } from 'class-validator';
 
 export class CreateQuestionDto {
   @IsString()
-  @MinLength(5)
+  @Length(1, 2000)
   questionText: string;
 
-  @IsObject()
-  options: Record<'A' | 'B' | 'C' | 'D', string>;
-
-  @IsIn(['A', 'B', 'C', 'D'])
+  @IsString()
+  @IsEnum(['A', 'B', 'C', 'D', 'E', 'F'])
   correctAnswer: string;
 
   @IsOptional()
-  @IsInt()
-  @Min(1)
+  options?: Record<string, string>;
+
+  @IsOptional()
   marks?: number;
 
   @IsOptional()
-  @IsInt()
-  @Min(0)
-  orderIndex?: number;
+  @IsArray()
+  @IsString({ each: true })
+  categoryIds?: string[];
 }

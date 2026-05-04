@@ -40,4 +40,14 @@ export class QuestionsController {
     await this.questionsService.remove(examId, id, req.user);
     return { message: 'Question deleted successfully' };
   }
+
+  @Post('bulk-import')
+  @SerializeOptions({ groups: ['admin'] })
+  async bulkImport(
+    @Param('examId') examId: string,
+    @Body() dto: { questions: CreateQuestionDto[] },
+    @Req() req,
+  ) {
+    return this.questionsService.bulkImport(examId, dto.questions, req.user);
+  }
 }

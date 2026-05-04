@@ -348,7 +348,33 @@ export class TeacherClass {
 }
 ```
 
-### 4.3 questions
+### 4.3 question_categories
+
+```typescript
+@Entity('question_categories')
+export class QuestionCategory {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column({ length: 100 })
+  name: string; // e.g., "Algebra", "Grammar", "Biology"
+
+  @Column({ type: 'text', nullable: true })
+  description: string;
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'createdById' })
+  createdBy: User;
+
+  @Column()
+  createdById: string;
+
+  @CreateDateColumn()
+  createdAt: Date;
+}
+```
+
+### 4.4 questions
 
 ```typescript
 @Entity('questions')
@@ -363,12 +389,11 @@ export class Question {
   questionText: string;
 
   @Column({ type: 'jsonb' })
-  // Exact shape: { "A": "...", "B": "...", "C": "...", "D": "..." }
-  // Always exactly 4 options keyed A, B, C, D
-  options: Record<'A' | 'B' | 'C' | 'D', string>;
+  // Dynamic options — can have any number of options (A, B, C, D, E, F, etc.)
+  options: Record<string, string>;
 
   @Column({ type: 'char', length: 1 })
-  // Stored as 'A', 'B', 'C', or 'D'
+  // Stored as 'A', 'B', 'C', 'D', etc.
   // NEVER expose this field to students — use @Exclude() in serialization
   correctAnswer: string;
 
@@ -378,12 +403,16 @@ export class Question {
   @Column({ type: 'int', default: 0 })
   orderIndex: number; // Admin-defined order, used as base before randomization
 
+  @ManyToMany(() => QuestionCategory)
+  @JoinTable()
+  categories: QuestionCategory[];
+
   @CreateDateColumn()
   createdAt: Date;
 }
 ```
 
-### 4.4 submissions
+### 4.5 submissions
 
 ```typescript
 @Entity('submissions')
@@ -464,6 +493,7 @@ export class Submission {
 | `SubmissionsModule` | Exam sessions, autosave, submit, grading, randomization | Exam metadata CRUD |
 | `ResultsModule` | Reading scores and submission details | Writing any data |
 | `ClassesModule` | Class management, student enrollment, teacher assignment | Exams, submissions |
+| `CategoriesModule` | Question categories CRUD | Questions, submissions |
 | `Gateway` | WebSocket events for admin live monitoring | Business logic |
 
 ### Global setup in `main.ts`
@@ -527,6 +557,17 @@ All routes are prefixed with `/api/v1`. Auth routes require no token. All other 
 | GET | `/exams/:examId/questions` | JWT + Super Admin/Administrator/Teacher | List all questions (includes correct answers) |
 | PATCH | `/exams/:examId/questions/:id` | JWT + Super Admin/Administrator/Teacher | Update question |
 | DELETE | `/exams/:examId/questions/:id` | JWT + Super Admin/Administrator/Teacher | Delete question |
+| POST | `/exams/:examId/questions/bulk-import` | JWT + Super Admin/Administrator/Teacher | Bulk import questions from JSON/CSV |
+
+### Question Categories (Admin)
+
+| Method | Path | Guard | Description |
+|---|---|---|---|
+| POST | `/question-categories` | JWT + Super Admin/Administrator/Teacher | Create category |
+| GET | `/question-categories` | JWT + All authenticated | List all categories |
+| GET | `/question-categories/:id` | JWT + All authenticated | Get category detail |
+| PATCH | `/question-categories/:id` | JWT + Super Admin/Administrator/Teacher | Update category |
+| DELETE | `/question-categories/:id` | JWT + Super Admin/Administrator/Teacher | Delete category |
 
 ### Exams (Student)
 

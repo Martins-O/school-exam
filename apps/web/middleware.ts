@@ -16,10 +16,6 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  // For protected routes, we'll let the client-side handle the role check
-  // since we can't decode JWT in middleware easily without adding a library
-  // The client-side auth store will handle redirects based on role
-
   return NextResponse.next();
 }
 

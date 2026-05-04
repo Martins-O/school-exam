@@ -150,6 +150,36 @@ export default function AdminDashboard() {
                 <span className="text-slate-300 group-hover:text-amber-500 transition-colors text-xl">→</span>
               </div>
             </Link>
+
+            <Link href="/admin/classes" className="portal-card group p-2 block hover:translate-x-2">
+              <div className="bg-white p-8 rounded-lg flex items-center justify-between">
+                <div className="flex items-center gap-6">
+                  <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                    🏫
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-black text-slate-800 uppercase tracking-tight">Class Management</h3>
+                    <p className="text-xs font-bold text-slate-500 mt-1">Manage classes, enrollments, and teacher assignments.</p>
+                  </div>
+                </div>
+                <span className="text-slate-300 group-hover:text-indigo-600 transition-colors text-xl">→</span>
+              </div>
+            </Link>
+
+            <Link href="/admin/transcripts" className="portal-card group p-2 block hover:translate-x-2">
+              <div className="bg-white p-8 rounded-lg flex items-center justify-between">
+                <div className="flex items-center gap-6">
+                  <div className="w-14 h-14 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-purple-600 group-hover:text-white transition-all">
+                    📜
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-black text-slate-800 uppercase tracking-tight">Transcripts</h3>
+                    <p className="text-xs font-bold text-slate-500 mt-1">Generate and finalize academic transcripts.</p>
+                  </div>
+                </div>
+                <span className="text-slate-300 group-hover:text-purple-600 transition-colors text-xl">→</span>
+              </div>
+            </Link>
           </div>
 
           <div>

@@ -471,7 +471,55 @@ export class Submission {
 }
 ```
 
-### 4.5 Schema Notes
+### 4.6 transcripts
+
+```typescript
+@Entity('transcripts')
+export class Transcript {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'studentId' })
+  student: User;
+
+  @Column()
+  studentId: string;
+
+  @ManyToOne(() => User, { nullable: true })
+  @JoinColumn({ name: 'generatedById' })
+  generatedBy: User;
+
+  @Column({ nullable: true })
+  generatedById: string;
+
+  @Column({ type: 'timestamptz' })
+  periodStart: Date;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  periodEnd: Date;
+
+  @Column({ type: 'jsonb', default: [] })
+  results: any[];
+
+  @Column({ type: 'decimal', precision: 5, scale: 2, default: 0 })
+  averageScore: number;
+
+  @Column({ type: 'text', nullable: true })
+  comments: string;
+
+  @Column({ default: false })
+  isFinalized: boolean;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
+}
+```
+
+### 4.7 Schema Notes
 
 - All primary keys are UUID (`uuid_generate_v4()`). Enable the extension: `CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`
 - All timestamps use `timestamptz` (timezone-aware). Never use `timestamp` without timezone.
@@ -495,6 +543,7 @@ export class Submission {
 | `ClassesModule` | Class management, student enrollment, teacher assignment | Exams, submissions |
 | `CategoriesModule` | Question categories CRUD | Questions, submissions |
 | `ParentsModule` | Parent-student linking, parent result access | Exams, submissions |
+| `TranscriptsModule` | Transcript generation, auto-update, finalization | Exam CRUD |
 | `Gateway` | WebSocket events for admin live monitoring | Business logic |
 
 ### Global setup in `main.ts`
@@ -597,14 +646,6 @@ All routes are prefixed with `/api/v1`. Auth routes require no token. All other 
 |---|---|---|---|
 | GET | `/teacher/classes` | JWT + Teacher | List classes assigned to teacher |
 
-### Parent
-
-| Method | Path | Guard | Description |
-|---|---|---|---|
-| POST | `/parent/link-student` | JWT + Super Admin/Administrator | Link parent to student (admin-only action) |
-| GET | `/parent/my-students` | JWT + Parent | List students linked to the authenticated parent |
-| DELETE | `/parent/unlink/:studentId` | JWT + Super Admin/Administrator | Unlink parent from student |
-
 ### Exam Sessions (Student — Exam Engine)
 
 | Method | Path | Guard | Description |
@@ -622,6 +663,24 @@ All routes are prefixed with `/api/v1`. Auth routes require no token. All other 
 | GET | `/results/:submissionId` | JWT + Student/Parent | Get a specific result (student sees own only, admin/teacher see all, parent sees linked students only) |
 | GET | `/admin/results` | JWT + Super Admin/Administrator | All submissions across all exams |
 | GET | `/admin/results/exam/:examId` | JWT + Super Admin/Administrator/Teacher | All submissions for a specific exam (teachers only see own exams) |
+
+### Parent
+
+| Method | Path | Guard | Description |
+|---|---|---|---|
+| POST | `/parent/link-student` | JWT + Super Admin/Administrator | Link parent to student |
+| GET | `/parent/my-students` | JWT + Parent | List linked students |
+| GET | `/parent/student/:studentId/results` | JWT + Parent | View results for linked student |
+| DELETE | `/parent/unlink/:studentId` | JWT + Super Admin/Administrator | Unlink parent from student |
+
+### Transcripts
+
+| Method | Path | Guard | Description |
+|---|---|---|---|
+| POST | `/transcripts/generate` | JWT + Super Admin/Administrator | Generate transcript for student |
+| GET | `/transcripts/student/:studentId` | JWT + Student/Admin/Parent | List transcripts for student |
+| GET | `/transcripts/:id` | JWT + Student/Admin/Parent | Get transcript detail |
+| PATCH | `/transcripts/:id/finalize` | JWT + Super Admin/Administrator | Finalize transcript |
 
 ### Users (New)
 
@@ -1124,55 +1183,101 @@ Never return stack traces in production. Set `NODE_ENV=production` to suppress t
 
 Build in this exact order. Do not skip ahead. Each phase depends on the previous.
 
-### Phase 1 — Infrastructure
-- [ ] `docker-compose.yml` with PostgreSQL and Redis
-- [ ] `apps/api/` NestJS project scaffold (`nest new`)
-- [ ] `apps/web/` Next.js project scaffold (`create-next-app`)
-- [ ] TypeORM config connected to PostgreSQL
-- [ ] All four entities defined with decorators
-- [ ] Initial migration generated and run
-- [ ] UUID extension enabled in DB
+### Phase 1 — Infrastructure ✅
+- [x] `docker-compose.yml` with PostgreSQL and Redis
+- [x] `apps/api/` NestJS project scaffold (`nest new`)
+- [x] `apps/web/` Next.js project scaffold (`create-next-app`)
+- [x] TypeORM config connected to PostgreSQL
+- [x] All entities defined with decorators
+- [x] Initial migrations generated and run
+- [x] UUID extension enabled in DB
 
-### Phase 2 — Auth
-- [ ] `UsersModule` with `User` entity and `UsersService`
-- [ ] `AuthModule` with register + login endpoints
-- [ ] JWT strategy and `JwtAuthGuard`
-- [ ] `RolesGuard` and `@Roles()` decorator
-- [ ] `POST /auth/register` and `POST /auth/login` working
-- [ ] `GET /auth/me` working
+### Phase 2 — Auth ✅
+- [x] `UsersModule` with `User` entity and `UsersService`
+- [x] `AuthModule` with register + login endpoints
+- [x] JWT strategy and `JwtAuthGuard`
+- [x] `RolesGuard` and `@Roles()` decorator
+- [x] `POST /auth/register` and `POST /auth/login` working
+- [x] `GET /auth/me` working
 
-### Phase 3 — Exam & Question CRUD (Admin)
-- [ ] `ExamsModule` — full CRUD + publish endpoint
-- [ ] `QuestionsModule` — CRUD under exam
-- [ ] All admin routes guarded with `@Roles('admin')`
-- [ ] `correctAnswer` excluded from student-facing serialization
+### Phase 3 — Exam & Question CRUD (Admin) ✅
+- [x] `ExamsModule` — full CRUD + publish endpoint
+- [x] `QuestionsModule` — CRUD under exam
+- [x] All admin routes guarded with `@Roles('admin')`
+- [x] `correctAnswer` excluded from student-facing serialization
 
-### Phase 4 — Exam Engine
-- [ ] `RandomizerService` — Fisher-Yates shuffle
-- [ ] `ExamSessionService` — start exam (with eligibility checks + transaction)
-- [ ] `ExamSessionService` — autosave (merge logic + remaining time)
-- [ ] `ExamSessionService` — submit (grade + close)
-- [ ] `ExamSessionService` — `forceSubmit()` with optimistic lock
-- [ ] Scheduled job for expired sessions
-- [ ] Violation endpoint
+### Phase 4 — Exam Engine ✅
+- [x] `RandomizerService` — Fisher-Yates shuffle
+- [x] `ExamSessionService` — start exam (with eligibility checks + transaction)
+- [x] `ExamSessionService` — autosave (merge logic + remaining time)
+- [x] `ExamSessionService` — submit (grade + close)
+- [x] `ExamSessionService` — `forceSubmit()` with optimistic lock
+- [x] Scheduled job for expired sessions
+- [x] Violation endpoint
 
-### Phase 5 — Results
-- [ ] `ResultsModule` — student's own results
-- [ ] Admin results endpoints
+### Phase 5 — Results ✅
+- [x] `ResultsModule` — student's own results
+- [x] Admin results endpoints
 
-### Phase 6 — Frontend
-- [ ] Auth pages (login, register) + token storage
-- [ ] Student dashboard — list available exams
-- [ ] Exam page — full implementation per section 10.1
-- [ ] `ExamTimer` component with server reconciliation
-- [ ] `QuestionNavigator` component
-- [ ] Anti-cheat event listeners
-- [ ] `ViolationOverlay` component
-- [ ] Admin dashboard — exam CRUD UI
-- [ ] Admin question management UI
-- [ ] Results pages (student + admin)
+### Phase 6 — Role System Expansion ✅
+- [x] Updated `User` entity with expanded role enum (`super_admin`, `administrator`, `teacher`, `student`, `parent`)
+- [x] Added `createdById` relationship to `User` entity
+- [x] Created `UsersController` for admin user creation
+- [x] Added teacher ownership checks across `ExamsService`, `QuestionsService`, `ResultsService`
+- [x] Admin-only user creation endpoint: `POST /users`
 
-### Phase 7 — Hardening
+### Phase 7 — Classes Feature ✅
+- [x] Created `Class`, `ClassStudent`, `TeacherClass` entities
+- [x] Added `targetClasses` relationship to `Exam` entity
+- [x] Class CRUD endpoints for administrators
+- [x] Student enrollment endpoints
+- [x] Teacher assignment endpoints
+- [x] Updated exam eligibility to check student class membership
+- [x] Teacher restriction: only create exams for assigned classes
+
+### Phase 8 — Question Enhancements ✅
+- [x] Created `QuestionCategory` entity
+- [x] Added many-to-many relationship between `Question` and `QuestionCategory`
+- [x] Updated `options` field to dynamic `Record<string, string>` (no longer limited to A-D)
+- [x] Categories CRUD endpoints
+- [x] Bulk import endpoint for questions
+
+### Phase 9 — Parent Role & Linking ✅
+- [x] Created `ParentStudent` entity with `isActive` flag
+- [x] `ParentsModule` with link/unlink endpoints
+- [x] `GET /parent/my-students` for parents to view linked students
+- [x] Parent results access restricted to linked students only
+- [x] All parent endpoints validate parent-student link
+
+### Phase 10 — Transcripts & Auto-Generation ✅
+- [x] Created `Transcript` entity
+- [x] `TranscriptsModule` with CRUD endpoints
+- [x] `POST /transcripts/generate` — admin generates transcript for student
+- [x] `GET /transcripts/student/:studentId` — view transcripts (student/admin/parent)
+- [x] `GET /transcripts/:id` — get transcript detail
+- [x] `PATCH /transcripts/:id/finalize` — admin finalizes transcript
+- [x] `TranscriptAutoUpdateService` — auto-generates/updates transcript after each exam submission
+- [x] Integrated auto-update into exam submission flow (`submit` and `forceSubmit`)
+- [x] Transcript accumulation: all submissions within period automatically aggregated
+- [x] Average score calculation across all exams in period
+- [x] Parent access to linked student transcripts
+
+### Phase 11 — Frontend ✅
+- [x] Auth pages (login, register) + token storage
+- [x] Student dashboard — list available exams
+- [x] Exam page — full implementation per section 10.1
+- [x] `ExamTimer` component with server reconciliation
+- [x] `QuestionNavigator` component
+- [x] Anti-cheat event listeners
+- [x] `ViolationOverlay` component
+- [x] Admin dashboard — exam CRUD UI
+- [x] Admin question management UI
+- [x] Results pages (student + admin)
+- [x] Parent dashboard — linked students and results view
+- [x] Transcript pages (admin generation, student/parent viewing)
+- [x] Classes management page (admin)
+
+### Phase 12 — Hardening
 - [ ] Rate limiting on autosave and login
 - [ ] Helmet + CORS config
 - [ ] Global exception filter

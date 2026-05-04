@@ -9,6 +9,7 @@ import { ClassStudent } from '../classes/entities/class-student.entity';
 import { RandomizerService } from './randomizer.service';
 import { GraderService } from './grader.service';
 import { ExamGateway } from '../gateway/exam.gateway';
+import { TranscriptAutoUpdateService } from './transcript-auto-update.service';
 
 @Injectable()
 export class ExamSessionService {
@@ -24,6 +25,7 @@ export class ExamSessionService {
     private readonly randomizerService: RandomizerService,
     private readonly graderService: GraderService,
     private readonly examGateway: ExamGateway,
+    private readonly transcriptAutoUpdateService: TranscriptAutoUpdateService,
   ) {}
 
   getRemainingSeconds(submission: Submission, exam: Exam): number {
@@ -298,6 +300,11 @@ export class ExamSessionService {
       submittedAt: new Date().toISOString(),
     });
 
+    // Auto-update transcript after submission
+    this.transcriptAutoUpdateService.updateTranscriptAfterSubmission(submission.id).catch(err => {
+      console.error('Failed to update transcript after submission:', err);
+    });
+
     return {
       score,
       totalMarks,
@@ -347,6 +354,11 @@ export class ExamSessionService {
     if (result.affected === 0) {
       return this.submissionRepo.findOne({ where: { id: submission.id } });
     }
+
+    // Auto-update transcript after forced submission
+    this.transcriptAutoUpdateService.updateTranscriptAfterSubmission(submission.id).catch(err => {
+      console.error('Failed to update transcript after forced submission:', err);
+    });
 
     return this.submissionRepo.findOne({ where: { id: submission.id } });
   }

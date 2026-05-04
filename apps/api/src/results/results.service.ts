@@ -132,6 +132,46 @@ export class ResultsService {
     }));
   }
 
+  async getResultsByStudent(studentId: string, requestingUser: any): Promise<any[]> {
+    // Parents can only view results for linked students
+    if (requestingUser.role === 'parent') {
+      const isLinked = await this.submissionRepo.manager
+        .createQueryBuilder()
+        .select('1')
+        .from('parent_students', 'ps')
+        .where('ps.parentId = :parentId', { parentId: requestingUser.id })
+        .andWhere('ps.studentId = :studentId', { studentId })
+        .andWhere('ps.isActive = true')
+        .getRawOne();
+
+      if (!isLinked) {
+        throw new ForbiddenException('Not linked to this student');
+      }
+    }
+
+    // Admins and teachers can view any student's results
+    const submissions = await this.submissionRepo
+      .createQueryBuilder('s')
+      .innerJoinAndSelect('s.exam', 'e')
+      .where('s.studentId = :studentId', { studentId })
+      .andWhere('s.status != :status', { status: 'in_progress' })
+      .orderBy('s.submittedAt', 'DESC')
+      .getMany();
+
+    return submissions.map(s => ({
+      submissionId: s.id,
+      examTitle: s.exam.title,
+      score: s.score,
+      totalMarks: s.totalMarks,
+      percentage: s.totalMarks > 0 ? (s.score / s.totalMarks) * 100 : 0,
+      status: s.status,
+      submittedAt: s.submittedAt?.toISOString(),
+      startedAt: s.startedAt.toISOString(),
+      violations: s.violations,
+      autoSubmitted: s.autoSubmitted,
+    }));
+  }
+
   async getResultsByExam(examId: string, requestingUser?: any): Promise<any[]> {
     const query = this.submissionRepo
       .createQueryBuilder('s')

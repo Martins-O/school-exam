@@ -23,7 +23,7 @@ export default function QuestionNavigator({
         <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Question Matrix</h3>
         <div className="flex gap-4">
           <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 bg-jamb-green rounded"></div>
+            <div className="w-3 h-3 bg-brand-green rounded"></div>
             <span className="text-[10px] font-black text-slate-500 uppercase tracking-tighter">Answered</span>
           </div>
           <div className="flex items-center gap-1.5">
@@ -46,7 +46,7 @@ export default function QuestionNavigator({
           } else if (isFlagged) {
             bgClass = 'bg-amber-500 text-white border-amber-600';
           } else if (isAnswered) {
-            bgClass = 'bg-jamb-green text-white border-green-900';
+            bgClass = 'bg-brand-green text-white border-green-900';
           }
 
           return (

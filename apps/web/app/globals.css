@@ -3,10 +3,10 @@
 @tailwind utilities;
 
 :root {
-  --jamb-green: #00602F;
-  --jamb-gold: #FFD700;
-  --jamb-blue: #4D90FE;
-  --jamb-red: #D32F2F;
+  --brand-green: #00602F;
+  --brand-gold: #FFD700;
+  --brand-blue: #4D90FE;
+  --brand-red: #D32F2F;
   --background: #FFFFFF;
   --foreground: #1a1a1a;
 }
@@ -24,11 +24,11 @@
   }
 
   .portal-card:hover {
-    @apply shadow-md border-jamb-green/20;
+    @apply shadow-md border-brand-green/20;
   }
 
-  .jamb-header {
-    @apply bg-[var(--jamb-green)] text-white shadow-lg;
+  .cbt-header {
+    @apply bg-[var(--brand-green)] text-white shadow-lg;
   }
 
   .btn-primary {
@@ -40,7 +40,7 @@
   }
 
   .btn-green {
-    @apply bg-[var(--jamb-green)] hover:bg-green-800 text-white font-bold py-2 px-6 rounded-lg transition-all active:scale-95;
+    @apply bg-[var(--brand-green)] hover:bg-green-800 text-white font-bold py-2 px-6 rounded-lg transition-all active:scale-95;
   }
 
   .nav-tab {
@@ -48,7 +48,7 @@
   }
 
   .nav-tab.active {
-    @apply border-jamb-gold text-jamb-gold bg-black/10;
+    @apply border-brand-gold text-brand-gold bg-black/10;
   }
   
   .glass-card {

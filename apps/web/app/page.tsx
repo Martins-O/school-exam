@@ -6,32 +6,33 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 selection:bg-green-100 selection:text-green-900">
       {/* Official Header */}
-      <header className="jamb-header relative z-20">
+      <header className="cbt-header relative z-20">
         <div className="max-w-7xl mx-auto px-6 h-24 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center border-4 border-jamb-gold shadow-inner overflow-hidden">
-              <span className="text-jamb-green font-black text-2xl">J</span>
+            <div className="w-14 h-14 bg-white rounded-xl flex items-center justify-center border-4 border-brand-gold shadow-inner overflow-hidden">
+              <svg className="w-8 h-8 text-brand-green" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+              </svg>
             </div>
             <div className="flex flex-col">
-              <span className="text-xl font-black tracking-tighter leading-none">JAMB</span>
+              <span className="text-xl font-black tracking-tighter leading-none">CBT Exam</span>
               <span className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-80">COMPUTER BASED TEST</span>
             </div>
           </div>
           <nav className="hidden md:flex items-center gap-8">
-            <Link href="/login" className="text-sm font-black uppercase tracking-widest hover:text-jamb-gold transition-colors">Candidate Portal</Link>
-            <Link href="/login" className="text-sm font-black uppercase tracking-widest hover:text-jamb-gold transition-colors">Admin Login</Link>
             <Link 
               href="/login" 
-              className="px-6 py-2 bg-jamb-gold text-jamb-green font-black rounded-lg text-xs uppercase tracking-widest shadow-lg shadow-black/20 hover:scale-105 transition-all"
+              className="px-6 py-2 bg-brand-gold text-brand-green font-black rounded-lg text-xs uppercase tracking-widest shadow-lg shadow-black/20 hover:scale-105 transition-all"
             >
-              Sign In
+              Login
             </Link>
           </nav>
         </div>
       </header>
 
       {/* Sub Header / News Ticker */}
-      <div className="bg-jamb-gold text-jamb-green py-2 px-6 overflow-hidden whitespace-nowrap">
+      <div className="bg-brand-gold text-brand-green py-2 px-6 overflow-hidden whitespace-nowrap">
         <div className="animate-marquee inline-block text-[10px] font-black uppercase tracking-widest">
           IMPORTANT: CANDIDATES ARE ADVISED TO REGISTER WITH THEIR VALID DETAILS — EXAMINATION MALPRACTICE IS A PUNISHABLE OFFENSE — ENSURE YOUR SYSTEM IS FUNCTIONING BEFORE STARTING THE TEST
         </div>
@@ -39,13 +40,13 @@ export default function Home() {
 
       <main className="relative">
         {/* Banner Section */}
-        <section className="bg-jamb-green pt-20 pb-40 text-white text-center relative overflow-hidden">
+        <section className="bg-brand-green pt-20 pb-40 text-white text-center relative overflow-hidden">
           <div className="absolute inset-0 opacity-10 pointer-events-none">
             <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
           </div>
           <div className="max-w-4xl mx-auto px-6 relative z-10">
             <h1 className="text-5xl md:text-6xl font-black tracking-tight mb-6 uppercase">
-              Service Excellence <br /> <span className="text-jamb-gold">Integrity</span>
+              Service Excellence <br /> <span className="text-brand-gold">Integrity</span>
             </h1>
             <p className="text-lg text-white/80 font-medium mb-12 max-w-2xl mx-auto leading-relaxed">
               The standardized Computer-Based Testing platform for academic institutions. Secure, Reliable, and Authoritative.
@@ -53,7 +54,7 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link 
                 href="/login" 
-                className="w-full sm:w-auto px-10 py-5 bg-jamb-gold text-jamb-green font-black rounded-xl hover:bg-white transition-all shadow-xl shadow-black/20"
+                className="w-full sm:w-auto px-10 py-5 bg-brand-gold text-brand-green font-black rounded-xl hover:bg-white transition-all shadow-xl shadow-black/20"
               >
                 ACCESS CANDIDATE PORTAL
               </Link>
@@ -71,14 +72,14 @@ export default function Home() {
         <section className="max-w-7xl mx-auto px-6 -mt-20 relative z-10 pb-20">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="portal-card p-10 h-full flex flex-col">
-              <div className="w-16 h-16 bg-green-50 text-jamb-green rounded-2xl flex items-center justify-center text-3xl mb-8 border border-green-100">
+              <div className="w-16 h-16 bg-green-50 text-brand-green rounded-2xl flex items-center justify-center text-3xl mb-8 border border-green-100">
                 🛡️
               </div>
               <h3 className="text-xl font-black mb-4 uppercase tracking-tight">Zero Tolerance</h3>
               <p className="text-slate-500 text-sm leading-relaxed mb-8 flex-grow">
                 Our anti-cheat nodes monitor every browser action. Fullscreen enforcement and activity logging ensure a clean examination environment.
               </p>
-              <div className="h-1 w-12 bg-jamb-green/20 rounded-full"></div>
+              <div className="h-1 w-12 bg-brand-green/20 rounded-full"></div>
             </div>
             <div className="portal-card p-10 h-full flex flex-col">
               <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-3xl mb-8 border border-blue-100">
@@ -107,7 +108,7 @@ export default function Home() {
         <section className="bg-white border-t border-slate-100 py-20">
           <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div>
-              <h2 className="text-4xl font-black tracking-tight mb-8 text-jamb-green uppercase">
+              <h2 className="text-4xl font-black tracking-tight mb-8 text-brand-green uppercase">
                 A Unified Gateway for <br /> Future Success.
               </h2>
               <div className="space-y-6">
@@ -118,7 +119,7 @@ export default function Home() {
                   "Automated Results Verification System"
                 ].map((item, i) => (
                   <div key={i} className="flex items-start gap-4">
-                    <div className="mt-1 w-5 h-5 rounded-full bg-jamb-green text-white flex items-center justify-center text-[10px]">✓</div>
+                    <div className="mt-1 w-5 h-5 rounded-full bg-brand-green text-white flex items-center justify-center text-[10px]">✓</div>
                     <p className="font-bold text-slate-700">{item}</p>
                   </div>
                 ))}
@@ -131,7 +132,7 @@ export default function Home() {
                 <p className="text-slate-500 text-sm mb-8 leading-relaxed">
                   All examinations conducted on this platform are monitored by the institutional academic board. 
                 </p>
-                <Link href="/login" className="px-8 py-4 bg-jamb-green text-white font-black rounded-xl hover:bg-green-800 transition-all">
+                <Link href="/login" className="px-8 py-4 bg-brand-green text-white font-black rounded-xl hover:bg-green-800 transition-all">
                   START VERIFICATION
                 </Link>
               </div>
@@ -142,7 +143,7 @@ export default function Home() {
 
       <footer className="bg-slate-900 h-20 flex items-center justify-center">
         <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500">
-          &copy; {new Date().getFullYear()} JOINED ADMISSIONS AND MATRICULATION BOARD — PROTECTED SYSTEM
+          &copy; {new Date().getFullYear()} CBT EXAM PLATFORM — SECURE ASSESSMENT SYSTEM
         </p>
       </footer>
 

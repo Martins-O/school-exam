@@ -11,8 +11,8 @@ const config: Config = {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
-        'jamb-green': '#00602F',
-        'jamb-gold': '#FFD700',
+        'brand-green': '#00602F',
+        'brand-gold': '#FFD700',
       },
       animation: {
         'marquee': 'marquee 30s linear infinite',

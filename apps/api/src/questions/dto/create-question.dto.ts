@@ -2,12 +2,17 @@ import { IsString, IsOptional, IsArray, IsEnum, Length, IsObject, IsInt, Min } f
 
 export class CreateQuestionDto {
   @IsString()
-  @Length(1, 2000)
+  @Length(1, 5000)
   questionText: string;
 
+  @IsEnum(['objective', 'theory'])
+  @IsOptional()
+  type?: 'objective' | 'theory';
+
+  @IsOptional()
   @IsString()
   @Length(1, 1)
-  correctAnswer: string;
+  correctAnswer?: string;
 
   @IsOptional()
   @IsObject()
@@ -22,4 +27,17 @@ export class CreateQuestionDto {
   @IsArray()
   @IsString({ each: true })
   categoryIds?: string[];
+
+  @IsOptional()
+  @IsString()
+  pdfAttachment?: string;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  maxWordCount?: number;
+
+  @IsOptional()
+  @IsString()
+  passageText?: string;
 }

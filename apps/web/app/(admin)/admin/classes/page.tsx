@@ -104,27 +104,30 @@ export default function AdminClassesPage() {
 
   if (loading) return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-      <div className="w-12 h-12 border-4 border-jamb-green border-t-transparent rounded-full animate-spin"></div>
+      <div className="w-12 h-12 border-4 border-brand-green border-t-transparent rounded-full animate-spin"></div>
     </div>
   );
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans selection:bg-green-100">
-      <header className="jamb-header relative z-10">
+      <header className="cbt-header relative z-10">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <Link href="/admin/dashboard" className="flex items-center gap-4 group">
-            <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center font-black text-jamb-green text-xl border-b-2 border-slate-300">
-              J
+            <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center border-b-2 border-slate-300">
+              <svg className="w-5 h-5 text-brand-green" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+              </svg>
             </div>
             <span className="text-xl font-black tracking-tight flex items-center gap-2">
-              JAMB <span className="text-xs font-bold text-jamb-gold/80 block uppercase tracking-widest border-l border-white/20 pl-4 mt-1">Classes</span>
+              CBT Exam <span className="text-xs font-bold text-brand-gold/80 block uppercase tracking-widest border-l border-white/20 pl-4 mt-1">Classes</span>
             </span>
           </Link>
           <div className="flex items-center gap-6">
-            <Link href="/admin/dashboard" className="text-[10px] font-black uppercase tracking-widest hover:text-jamb-gold transition-colors">BACK TO DASHBOARD</Link>
+            <Link href="/admin/dashboard" className="text-[10px] font-black uppercase tracking-widest hover:text-brand-gold transition-colors">BACK TO DASHBOARD</Link>
             <button 
               onClick={() => setShowCreate(true)}
-              className="px-6 py-2 bg-jamb-gold text-jamb-green font-black rounded-lg text-xs uppercase tracking-widest shadow-lg shadow-black/20 hover:scale-105 transition-all"
+              className="px-6 py-2 bg-brand-gold text-brand-green font-black rounded-lg text-xs uppercase tracking-widest shadow-lg shadow-black/20 hover:scale-105 transition-all"
             >
               + New Class
             </button>
@@ -142,8 +145,8 @@ export default function AdminClassesPage() {
 
         {showCreate && (
           <div className="portal-card p-10 mb-12 bg-white">
-            <h2 className="text-2xl font-black mb-8 text-jamb-green uppercase tracking-tight flex items-center gap-3">
-              <span className="w-1.5 h-8 bg-jamb-gold rounded-full"></span>
+            <h2 className="text-2xl font-black mb-8 text-brand-green uppercase tracking-tight flex items-center gap-3">
+              <span className="w-1.5 h-8 bg-brand-gold rounded-full"></span>
               Create New Class
             </h2>
             <form onSubmit={handleCreate} className="space-y-6">
@@ -151,7 +154,7 @@ export default function AdminClassesPage() {
                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Class Name</label>
                 <input 
                   type="text" value={name} onChange={e => setName(e.target.value)}
-                  className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-6 py-4 text-slate-800 font-bold focus:border-jamb-green/40 outline-none"
+                  className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-6 py-4 text-slate-800 font-bold focus:border-brand-green/40 outline-none"
                   placeholder="e.g. Grade 10A, JSS 2"
                   required
                 />
@@ -160,7 +163,7 @@ export default function AdminClassesPage() {
                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Description (optional)</label>
                 <textarea 
                   value={description} onChange={e => setDescription(e.target.value)}
-                  className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-6 py-4 text-slate-800 font-bold focus:border-jamb-green/40 outline-none transition-all min-h-[80px]"
+                  className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-6 py-4 text-slate-800 font-bold focus:border-brand-green/40 outline-none transition-all min-h-[80px]"
                   placeholder="e.g. Science stream, 2025 cohort..."
                 />
               </div>
@@ -173,7 +176,7 @@ export default function AdminClassesPage() {
                 </button>
                 <button 
                   type="submit"
-                  className="flex-1 px-4 py-4 bg-jamb-green text-white rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-green-800 transition-all shadow-lg"
+                  className="flex-1 px-4 py-4 bg-brand-green text-white rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-green-800 transition-all shadow-lg"
                 >
                   Create
                 </button>
@@ -221,7 +224,7 @@ export default function AdminClassesPage() {
                   </button>
                   <button
                     onClick={() => { setSelectedClass(c); setShowAssignTeacher(true); }}
-                    className="w-full px-4 py-3 bg-green-50 text-jamb-green rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-green-100 transition-all"
+                    className="w-full px-4 py-3 bg-green-50 text-brand-green rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-green-100 transition-all"
                   >
                     + Assign Teacher
                   </button>
@@ -243,13 +246,13 @@ export default function AdminClassesPage() {
       {showEnroll && selectedClass && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-sm">
           <div className="portal-card max-w-md w-full p-10 bg-white">
-            <h2 className="text-2xl font-black mb-8 text-jamb-green uppercase tracking-tight">Enroll Student in {selectedClass.name}</h2>
+            <h2 className="text-2xl font-black mb-8 text-brand-green uppercase tracking-tight">Enroll Student in {selectedClass.name}</h2>
             <div className="space-y-6">
               <div>
                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Student</label>
                 <select 
                   value={selectedStudent} onChange={e => setSelectedStudent(e.target.value)}
-                  className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-6 py-4 text-slate-800 font-bold focus:border-jamb-green/40 outline-none"
+                  className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-6 py-4 text-slate-800 font-bold focus:border-brand-green/40 outline-none"
                   required
                 >
                   <option value="">Select a student...</option>
@@ -267,7 +270,7 @@ export default function AdminClassesPage() {
                 </button>
                 <button 
                   type="button" onClick={handleEnroll}
-                  className="flex-1 px-4 py-4 bg-jamb-green text-white rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-green-800 transition-all shadow-lg"
+                  className="flex-1 px-4 py-4 bg-brand-green text-white rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-green-800 transition-all shadow-lg"
                 >
                   Enroll
                 </button>
@@ -281,13 +284,13 @@ export default function AdminClassesPage() {
       {showAssignTeacher && selectedClass && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-sm">
           <div className="portal-card max-w-md w-full p-10 bg-white">
-            <h2 className="text-2xl font-black mb-8 text-jamb-green uppercase tracking-tight">Assign Teacher to {selectedClass.name}</h2>
+            <h2 className="text-2xl font-black mb-8 text-brand-green uppercase tracking-tight">Assign Teacher to {selectedClass.name}</h2>
             <div className="space-y-6">
               <div>
                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Teacher</label>
                 <select 
                   value={selectedTeacher} onChange={e => setSelectedTeacher(e.target.value)}
-                  className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-6 py-4 text-slate-800 font-bold focus:border-jamb-green/40 outline-none"
+                  className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-6 py-4 text-slate-800 font-bold focus:border-brand-green/40 outline-none"
                   required
                 >
                   <option value="">Select a teacher...</option>
@@ -305,7 +308,7 @@ export default function AdminClassesPage() {
                 </button>
                 <button 
                   type="button" onClick={handleAssignTeacher}
-                  className="flex-1 px-4 py-4 bg-jamb-green text-white rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-green-800 transition-all shadow-lg"
+                  className="flex-1 px-4 py-4 bg-brand-green text-white rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-green-800 transition-all shadow-lg"
                 >
                   Assign
                 </button>

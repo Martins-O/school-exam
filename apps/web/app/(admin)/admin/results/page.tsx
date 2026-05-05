@@ -39,24 +39,27 @@ export default function AdminResultsPage() {
 
   if (loading) return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-      <div className="w-12 h-12 border-4 border-jamb-green border-t-transparent rounded-full animate-spin"></div>
+      <div className="w-12 h-12 border-4 border-brand-green border-t-transparent rounded-full animate-spin"></div>
     </div>
   );
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans selection:bg-green-100">
-      <header className="jamb-header">
+      <header className="cbt-header">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <Link href="/admin/dashboard" className="flex items-center gap-4 group">
-            <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center font-black text-jamb-green text-xl border-b-2 border-slate-300">
-              J
+            <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center border-b-2 border-slate-300">
+              <svg className="w-5 h-5 text-brand-green" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+              </svg>
             </div>
             <span className="text-xl font-black tracking-tight flex items-center gap-2">
-              JAMB <span className="text-xs font-bold text-jamb-gold/80 block uppercase tracking-widest border-l border-white/20 pl-4 mt-1">Analytics</span>
+              CBT Exam <span className="text-xs font-bold text-brand-gold/80 block uppercase tracking-widest border-l border-white/20 pl-4 mt-1">Analytics</span>
             </span>
           </Link>
           <div className="flex items-center gap-6">
-            <Link href="/admin/dashboard" className="text-[10px] font-black uppercase tracking-widest hover:text-jamb-gold transition-colors">BACK TO DASHBOARD</Link>
+            <Link href="/admin/dashboard" className="text-[10px] font-black uppercase tracking-widest hover:text-brand-gold transition-colors">BACK TO DASHBOARD</Link>
           </div>
         </div>
       </header>
@@ -91,7 +94,7 @@ export default function AdminResultsPage() {
                   className="hover:bg-blue-50/30 cursor-pointer transition-colors group"
                 >
                   <td className="px-8 py-6">
-                    <div className="font-black text-slate-800 group-hover:text-jamb-green transition-colors uppercase tracking-tight">{r.studentName}</div>
+                    <div className="font-black text-slate-800 group-hover:text-brand-green transition-colors uppercase tracking-tight">{r.studentName}</div>
                     <div className="text-[10px] font-mono text-slate-400 mt-1 uppercase">{r.studentEmail}</div>
                   </td>
                   <td className="px-8 py-6 text-sm font-bold text-slate-600 uppercase tracking-tighter">

@@ -67,28 +67,32 @@ export default function ParentDashboard() {
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-jamb-green border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-12 h-12 border-4 border-brand-green border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans selection:bg-green-100">
-      <header className="jamb-header">
+      <header className="cbt-header">
         <div className="max-w-7xl mx-auto px-6 h-24 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center border-2 border-jamb-gold">
-               <span className="text-jamb-green font-black text-xl">JAMB</span>
+            <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center border-2 border-brand-gold">
+              <svg className="w-7 h-7 text-brand-green" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+              </svg>
             </div>
             <div className="flex flex-col border-l border-white/20 pl-4">
-              <span className="text-sm font-black uppercase tracking-widest text-jamb-gold">Parent Portal</span>
+              <span className="text-sm font-black uppercase tracking-widest text-brand-gold">Parent Portal</span>
               <span className="text-[10px] font-bold opacity-70">Guardian Access Node</span>
             </div>
           </div>
-          <div className="flex items-center gap-8">
-            <div className="hidden md:flex flex-col items-end">
+           <div className="flex items-center gap-8">
+             <Link href="/parent/transcripts" className="text-[10px] font-black uppercase tracking-widest text-white/80 hover:text-brand-gold transition-colors">VIEW TRANSCRIPTS</Link>
+             <div className="hidden md:flex flex-col items-end">
               <span className="text-sm font-black uppercase tracking-tight">{user?.name}</span>
-              <span className="text-[10px] font-bold text-jamb-gold/80 block uppercase tracking-widest">PARENT/GUARDIAN</span>
+              <span className="text-[10px] font-bold text-brand-gold/80 block uppercase tracking-widest">PARENT/GUARDIAN</span>
             </div>
             <button 
               onClick={handleLogout}
@@ -103,7 +107,7 @@ export default function ParentDashboard() {
       <main className="max-w-6xl mx-auto px-6 py-12">
         <h1 className="text-3xl font-black text-slate-800 uppercase tracking-tight mb-12 flex items-center gap-4">
           Guardian Dashboard
-          <span className="h-1 bg-jamb-green flex-grow rounded-full opacity-10"></span>
+          <span className="h-1 bg-brand-green flex-grow rounded-full opacity-10"></span>
         </h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
@@ -121,7 +125,7 @@ export default function ParentDashboard() {
                     key={student.id}
                     onClick={() => loadStudentResults(student)}
                     className={`portal-card p-6 w-full text-left transition-all ${
-                      selectedStudent?.id === student.id ? 'border-jamb-green bg-green-50' : ''
+                      selectedStudent?.id === student.id ? 'border-brand-green bg-green-50' : ''
                     }`}
                   >
                     <div className="flex items-center gap-4">
@@ -143,7 +147,7 @@ export default function ParentDashboard() {
             {selectedStudent ? (
               <div>
                 <div className="flex items-center justify-between mb-8 border-b-2 border-slate-200 pb-6">
-                  <h2 className="text-xl font-black text-jamb-green uppercase tracking-tight">
+                  <h2 className="text-xl font-black text-brand-green uppercase tracking-tight">
                     {selectedStudent.name}'s Results
                   </h2>
                   <span className="bg-slate-200 px-3 py-1 rounded-full text-[10px] font-black text-slate-600 uppercase tracking-widest">
@@ -153,7 +157,7 @@ export default function ParentDashboard() {
 
                 {resultsLoading ? (
                   <div className="flex items-center justify-center py-20">
-                    <div className="w-10 h-10 border-4 border-jamb-green border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-10 h-10 border-4 border-brand-green border-t-transparent rounded-full animate-spin"></div>
                   </div>
                 ) : results.length === 0 ? (
                   <div className="portal-card p-20 text-center border-dashed">
@@ -173,7 +177,7 @@ export default function ParentDashboard() {
                           <div className="flex items-center gap-6">
                             <div className="text-center">
                               <p className={`text-3xl font-black tabular-nums ${
-                                result.percentage >= 70 ? 'text-jamb-green' : result.percentage >= 50 ? 'text-amber-500' : 'text-red-500'
+                                result.percentage >= 70 ? 'text-brand-green' : result.percentage >= 50 ? 'text-amber-500' : 'text-red-500'
                               }`}>
                                 {Math.round(result.percentage)}%
                               </p>

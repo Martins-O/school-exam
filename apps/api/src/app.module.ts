@@ -18,6 +18,7 @@ import { CategoriesModule } from './categories/categories.module';
 import { ParentsModule } from './parents/parents.module';
 import { TranscriptsModule } from './transcripts/transcripts.module';
 import { GatewayModule } from './gateway/gateway.module';
+import { TeacherModule } from './teacher/teacher.module';
 import { RequestLoggerMiddleware } from './common/middleware/request-logger.middleware';
 import { HealthController } from './health.controller';
 
@@ -74,6 +75,8 @@ import { HealthController } from './health.controller';
     CategoriesModule,
     ParentsModule,
     TranscriptsModule,
+    GatewayModule,
+    TeacherModule,
   ],
   controllers: [AppController, HealthController],
   providers: [

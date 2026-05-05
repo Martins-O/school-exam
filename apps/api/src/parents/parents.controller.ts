@@ -4,6 +4,7 @@ import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { ParentsService } from './parents.service';
 import { ResultsService } from '../results/results.service';
+import { TranscriptsService } from '../transcripts/transcripts.service';
 import { LinkStudentDto } from './dto/link-student.dto';
 
 @Controller('parent')
@@ -12,6 +13,7 @@ export class ParentsController {
   constructor(
     private readonly parentsService: ParentsService,
     private readonly resultsService: ResultsService,
+    private readonly transcriptsService: TranscriptsService,
   ) {}
 
   @Post('link-student')
@@ -36,7 +38,7 @@ export class ParentsController {
   @Get('student/:studentId/transcripts')
   @Roles('parent')
   async getStudentTranscripts(@Param('studentId') studentId: string, @Req() req) {
-    return this.resultsService.getResultsByStudent(studentId, req.user);
+    return this.transcriptsService.findByStudent(studentId, req.user);
   }
 
   @Delete('unlink/:studentId')

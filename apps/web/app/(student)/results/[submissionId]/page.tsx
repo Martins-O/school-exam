@@ -11,6 +11,8 @@ interface Result {
   totalMarks: number;
   percentage: number;
   status: string;
+  gradingStatus?: 'auto_graded' | 'pending_manual' | 'fully_graded';
+  finalScore?: number | null;
   startedAt: string;
   submittedAt: string;
   autoSubmitted: boolean;
@@ -31,7 +33,7 @@ export default function ResultDetailPage() {
 
   if (loading) return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-      <div className="w-12 h-12 border-4 border-jamb-green border-t-transparent rounded-full animate-spin"></div>
+      <div className="w-12 h-12 border-4 border-brand-green border-t-transparent rounded-full animate-spin"></div>
     </div>
   );
 
@@ -43,17 +45,17 @@ export default function ResultDetailPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans selection:bg-green-100">
-      <header className="jamb-header">
+      <header className="cbt-header">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <button
             onClick={() => router.back()}
-            className="text-[10px] font-black uppercase tracking-[0.3em] text-white hover:text-jamb-gold transition-colors flex items-center gap-2"
+            className="text-[10px] font-black uppercase tracking-[0.3em] text-white hover:text-brand-gold transition-colors flex items-center gap-2"
           >
             <span>←</span> Back to Portal
           </button>
           <div className="flex items-center gap-3">
-             <div className="w-8 h-8 bg-white rounded flex items-center justify-center font-black text-jamb-green">J</div>
-             <span className="text-sm font-black uppercase tracking-widest text-jamb-gold">Verification Result</span>
+             <div className="w-8 h-8 bg-white rounded flex items-center justify-center font-black text-brand-green">J</div>
+             <span className="text-sm font-black uppercase tracking-widest text-brand-gold">Verification Result</span>
           </div>
         </div>
       </header>
@@ -62,7 +64,7 @@ export default function ResultDetailPage() {
         <div className="portal-card bg-white p-12 relative overflow-hidden">
            {/* Certification Watermark */}
            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.03] rotate-[-25deg] pointer-events-none text-9xl font-black whitespace-nowrap">
-              JAMB CERTIFIED RESULT
+              CBT EXAM CERTIFIED RESULT
            </div>
 
            <div className="relative z-10">
@@ -79,40 +81,64 @@ export default function ResultDetailPage() {
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-8 mb-12">
-                <div className="bg-slate-50 border-2 border-slate-100 p-8 rounded-[1.5rem] flex flex-col items-center">
-                   <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Total Score</p>
-                   <p className="text-5xl font-black text-slate-800 tabular-nums">
-                     {result.score} <span className="text-slate-300 text-2xl">/</span> {result.totalMarks}
-                   </p>
-                </div>
-                <div className="bg-slate-50 border-2 border-slate-100 p-8 rounded-[1.5rem] flex flex-col items-center">
-                   <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Percentage</p>
-                   <p className={`text-5xl font-black tabular-nums ${
-                      result.percentage >= 70 ? 'text-jamb-green' : result.percentage >= 50 ? 'text-amber-500' : 'text-red-500'
-                   }`}>
-                     {Math.round(result.percentage)}%
-                   </p>
-                </div>
-                <div className="bg-slate-50 border-2 border-slate-100 p-8 rounded-[1.5rem] flex flex-col items-center">
-                   <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Terminal State</p>
-                   <div className="flex items-center gap-2 mt-2">
-                      <span className={`w-2 h-2 rounded-full ${result.status === 'submitted' ? 'bg-jamb-green' : 'bg-red-500'}`}></span>
-                      <span className="text-xl font-black uppercase tracking-tighter text-slate-700">{result.status}</span>
+               <div className="grid grid-cols-2 gap-8 mb-12">
+                 <div className="bg-slate-50 border-2 border-slate-100 p-8 rounded-[1.5rem] flex flex-col items-center">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Objective Score</p>
+                    <p className="text-5xl font-black text-slate-800 tabular-nums">
+                      {result.score} <span className="text-slate-300 text-2xl">/</span> {result.totalMarks}
+                    </p>
+                 </div>
+                 <div className="bg-slate-50 border-2 border-slate-100 p-8 rounded-[1.5rem] flex flex-col items-center">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Percentage</p>
+                    <p className={`text-5xl font-black tabular-nums ${
+                       result.percentage >= 70 ? 'text-brand-green' : result.percentage >= 50 ? 'text-amber-500' : 'text-red-500'
+                    }`}>
+                      {Math.round(result.percentage)}%
+                    </p>
+                 </div>
+                 <div className="bg-slate-50 border-2 border-slate-100 p-8 rounded-[1.5rem] flex flex-col items-center">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Terminal State</p>
+                    <div className="flex items-center gap-2 mt-2">
+                       <span className={`w-2 h-2 rounded-full ${result.status === 'submitted' ? 'bg-brand-green' : 'bg-red-500'}`}></span>
+                       <span className="text-xl font-black uppercase tracking-tighter text-slate-700">{result.status}</span>
+                    </div>
+                 </div>
+                 <div className="bg-slate-50 border-2 border-slate-100 p-8 rounded-[1.5rem] flex flex-col items-center">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Session Log</p>
+                    <p className="text-4xl font-black text-slate-800 tabular-nums uppercase tracking-tighter">
+                      {Math.round(timeTaken)} <span className="text-xs font-bold text-slate-300">MINS</span>
+                    </p>
+                 </div>
+               </div>
+
+               {result.gradingStatus === 'pending_manual' && (
+                 <div className="bg-purple-50 border-2 border-purple-200 text-purple-700 px-6 py-4 rounded-2xl mb-8 text-sm font-bold flex items-center gap-3">
+                   <span className="text-xl">📝</span>
+                   <div>
+                     <p className="font-black uppercase tracking-wider">Theory Questions Pending Manual Grading</p>
+                     <p className="text-xs font-medium opacity-80">Your objective score is {result.score}. Final score will be updated after theory questions are graded.</p>
                    </div>
-                </div>
-                <div className="bg-slate-50 border-2 border-slate-100 p-8 rounded-[1.5rem] flex flex-col items-center">
-                   <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Session Log</p>
-                   <p className="text-4xl font-black text-slate-800 tabular-nums uppercase tracking-tighter">
-                     {Math.round(timeTaken)} <span className="text-xs font-bold text-slate-300">MINS</span>
-                   </p>
-                </div>
-              </div>
+                 </div>
+               )}
+
+               {result.gradingStatus === 'fully_graded' && result.finalScore !== null && (
+                 <div className="bg-green-50 border-2 border-green-200 text-green-700 px-6 py-4 rounded-2xl mb-8">
+                   <div className="flex items-center justify-between">
+                     <div className="flex items-center gap-3">
+                       <span className="text-xl">✅</span>
+                       <p className="font-black uppercase tracking-wider">Fully Graded</p>
+                     </div>
+                     <p className="text-3xl font-black">
+                       Final Score: {result.finalScore} / {result.totalMarks}
+                     </p>
+                   </div>
+                 </div>
+               )}
 
               <div className="pt-12 border-t-2 border-dashed border-slate-100 flex flex-col sm:flex-row gap-4">
                  <button
                     onClick={() => router.push('/dashboard')}
-                    className="flex-1 bg-jamb-green text-white font-black py-5 rounded-xl hover:bg-green-800 transition-all shadow-xl shadow-green-900/10 uppercase text-xs tracking-widest"
+                    className="flex-1 bg-brand-green text-white font-black py-5 rounded-xl hover:bg-green-800 transition-all shadow-xl shadow-green-900/10 uppercase text-xs tracking-widest"
                  >
                     Establish New Link
                  </button>
@@ -127,7 +153,7 @@ export default function ResultDetailPage() {
               <div className="mt-12 text-center">
                 <p className="text-[8px] font-black text-slate-400 uppercase tracking-[0.4em] leading-relaxed">
                    THIS IS AN ELECTRICALLY GENERATED CERTIFICATE. ANY MODIFICATION INVALIDATES THIS RECORD. <br />
-                   VERIFICATION ID: {submissionId?.toString().toUpperCase()} — GATEWAY: JAMB-CBT-1.0
+                   VERIFICATION ID: {submissionId?.toString().toUpperCase()} — SYSTEM: CBT-1.0
                 </p>
               </div>
            </div>

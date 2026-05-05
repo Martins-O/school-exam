@@ -15,6 +15,9 @@ interface Question {
   questionText: string;
   options: Record<'A' | 'B' | 'C' | 'D', string>;
   marks: number;
+  type: 'objective' | 'theory';
+  maxWordCount?: number | null;
+  passageText?: string | null;
 }
 
 interface ExamSession {
@@ -168,8 +171,8 @@ export default function ExamRoomPage() {
   if (status === 'loading') return (
     <div className="min-h-screen bg-slate-100 flex items-center justify-center">
       <div className="text-center">
-        <div className="w-16 h-16 border-4 border-jamb-green border-t-transparent rounded-full animate-spin mb-4 mx-auto"></div>
-        <p className="font-bold text-jamb-green uppercase tracking-widest text-xs">Accessing Official Node...</p>
+        <div className="w-16 h-16 border-4 border-brand-green border-t-transparent rounded-full animate-spin mb-4 mx-auto"></div>
+        <p className="font-bold text-brand-green uppercase tracking-widest text-xs">Accessing Official Node...</p>
       </div>
     </div>
   );
@@ -177,15 +180,15 @@ export default function ExamRoomPage() {
   return (
     <div className="min-h-screen bg-white flex flex-col font-sans select-none overflow-hidden">
       {/* Official Exam Header */}
-      <header className="bg-jamb-green text-white px-6 py-4 flex items-center justify-between shadow-lg relative z-50">
+      <header className="bg-brand-green text-white px-6 py-4 flex items-center justify-between shadow-lg relative z-50">
         <div className="flex items-center gap-6">
-          <div className="w-16 h-16 bg-white rounded-lg flex flex-col items-center justify-center border-2 border-jamb-gold">
-            <span className="text-jamb-green font-black text-2xl">JAMB</span>
-            <span className="text-[6px] font-bold text-jamb-green uppercase tracking-tighter">CBT Terminal</span>
+          <div className="w-16 h-16 bg-white rounded-lg flex flex-col items-center justify-center border-2 border-brand-gold">
+            <span className="text-brand-green font-black text-2xl">CBT Exam</span>
+            <span className="text-[6px] font-bold text-brand-green uppercase tracking-tighter">CBT Terminal</span>
           </div>
           <div className="h-10 w-px bg-white/20"></div>
           <div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-jamb-gold mb-1">CANDIDATE IDENTITY</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-brand-gold mb-1">CANDIDATE IDENTITY</p>
             <h2 className="text-xl font-black tracking-tight uppercase">{user?.name}</h2>
             <p className="text-[10px] font-mono text-white/60">{user?.email}</p>
           </div>
@@ -194,7 +197,7 @@ export default function ExamRoomPage() {
         <div className="flex items-center gap-12">
           <div className="text-center">
             <p className="text-[10px] font-black uppercase tracking-widest text-white/60 mb-1">EXAMINATION SUBJECT</p>
-            <p className="font-black text-lg text-jamb-gold uppercase">{session?.examTitle}</p>
+            <p className="font-black text-lg text-brand-gold uppercase">{session?.examTitle}</p>
           </div>
           <div className="h-10 w-px bg-white/20"></div>
           <div className="flex flex-col items-end">
@@ -207,20 +210,6 @@ export default function ExamRoomPage() {
         </div>
       </header>
 
-      {/* Subject Navigation Bar (Simulator) */}
-      <div className="bg-slate-100 border-b border-slate-200 px-6 flex items-center overflow-x-auto h-12 scrollbar-none">
-        <div className="flex items-center gap-0 h-full">
-          {['SECTION A', 'SECTION B (OPTIONAL)', 'REFERENCE'].map((section, idx) => (
-            <button
-              key={section}
-              className={`nav-tab h-full flex items-center whitespace-nowrap ${idx === 0 ? 'active' : 'text-slate-400'}`}
-            >
-              {section}
-            </button>
-          ))}
-        </div>
-      </div>
-
       {status === 'active' && (
         <main className="flex-1 flex flex-col items-center bg-slate-50 relative">
           <div className="w-full max-w-5xl px-6 py-8 flex-1 flex flex-col">
@@ -228,7 +217,7 @@ export default function ExamRoomPage() {
               <div className="flex-1 flex flex-col">
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-3">
-                    <span className="w-10 h-10 bg-jamb-green text-white rounded flex items-center justify-center font-black text-xl shadow-sm">
+                    <span className="w-10 h-10 bg-brand-green text-white rounded flex items-center justify-center font-black text-xl shadow-sm">
                       {currentIndex + 1}
                     </span>
                     <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">of {session.questions.length} questions</span>

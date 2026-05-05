@@ -30,13 +30,8 @@ export default function AdminDashboard() {
 
   const loadStats = async () => {
     try {
-      // Mock stats for beauty if API doesn't have it yet
-      setStats({
-        totalStudents: 1250,
-        totalExams: 12,
-        totalSubmissions: 890,
-        activeExams: 4,
-      });
+      const res = await api.get('/admin/results/stats');
+      setStats(res.data);
       setLoading(false);
     } catch {
       router.push('/login');
@@ -45,27 +40,30 @@ export default function AdminDashboard() {
 
   if (loading) return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-      <div className="w-12 h-12 border-4 border-jamb-green border-t-transparent rounded-full animate-spin"></div>
+      <div className="w-12 h-12 border-4 border-brand-green border-t-transparent rounded-full animate-spin"></div>
     </div>
   );
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans selection:bg-green-100">
-      <header className="jamb-header">
+      <header className="cbt-header">
         <div className="max-w-7xl mx-auto px-6 h-24 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center border-2 border-jamb-gold">
-               <span className="text-jamb-green font-black text-xl">JAMB</span>
+            <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center border-2 border-brand-gold">
+              <svg className="w-7 h-7 text-brand-green" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+              </svg>
             </div>
             <div className="flex flex-col border-l border-white/20 pl-4">
-              <span className="text-sm font-black uppercase tracking-widest text-jamb-gold">Admin Command</span>
+              <span className="text-sm font-black uppercase tracking-widest text-brand-gold">Admin Command</span>
               <span className="text-[10px] font-bold opacity-70">Control & Monitoring Node</span>
             </div>
           </div>
           <div className="flex items-center gap-6">
             <div className="hidden md:flex flex-col items-end">
               <span className="text-sm font-black uppercase tracking-tight">{user?.name}</span>
-              <span className="text-[10px] font-bold text-jamb-gold block uppercase tracking-widest leading-none mt-1">SUPER ADMINISTRATOR</span>
+              <span className="text-[10px] font-bold text-brand-gold block uppercase tracking-widest leading-none mt-1">SUPER ADMINISTRATOR</span>
             </div>
             <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center border border-white/20">
                👤
@@ -77,13 +75,13 @@ export default function AdminDashboard() {
       <main className="max-w-7xl mx-auto px-6 py-12">
         <h1 className="text-3xl font-black text-slate-800 uppercase tracking-tight mb-12 flex items-center gap-4">
           Institutional Dashboard
-          <span className="h-1 bg-jamb-green flex-grow rounded-full opacity-10"></span>
+          <span className="h-1 bg-brand-green flex-grow rounded-full opacity-10"></span>
         </h1>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
           {[
-            { label: 'Total Candidates', value: stats.totalStudents, color: 'jamb-green', icon: '👥' },
+            { label: 'Total Candidates', value: stats.totalStudents, color: 'brand-green', icon: '👥' },
             { label: 'Exam Blueprints', value: stats.totalExams, color: 'blue-600', icon: '📝' },
             { label: 'Active Sessions', value: stats.activeExams, color: 'emerald-500', icon: '⚡' },
             { label: 'Submissions Audit', value: stats.totalSubmissions, color: 'amber-500', icon: '📁' },
@@ -109,7 +107,7 @@ export default function AdminDashboard() {
             <Link href="/admin/exams" className="portal-card group p-2 block hover:translate-x-2">
               <div className="bg-white p-8 rounded-lg flex items-center justify-between">
                 <div className="flex items-center gap-6">
-                  <div className="w-14 h-14 bg-green-50 text-jamb-green rounded-2xl flex items-center justify-center text-2xl group-hover:bg-jamb-green group-hover:text-white transition-all">
+                  <div className="w-14 h-14 bg-green-50 text-brand-green rounded-2xl flex items-center justify-center text-2xl group-hover:bg-brand-green group-hover:text-white transition-all">
                     📋
                   </div>
                   <div>
@@ -117,7 +115,7 @@ export default function AdminDashboard() {
                     <p className="text-xs font-bold text-slate-500 mt-1">Configure and publish new examinations.</p>
                   </div>
                 </div>
-                <span className="text-slate-300 group-hover:text-jamb-green transition-colors text-xl">→</span>
+                <span className="text-slate-300 group-hover:text-brand-green transition-colors text-xl">→</span>
               </div>
             </Link>
 
@@ -148,6 +146,21 @@ export default function AdminDashboard() {
                   </div>
                 </div>
                 <span className="text-slate-300 group-hover:text-amber-500 transition-colors text-xl">→</span>
+              </div>
+            </Link>
+
+            <Link href="/admin/grading" className="portal-card group p-2 block hover:translate-x-2">
+              <div className="bg-white p-8 rounded-lg flex items-center justify-between">
+                <div className="flex items-center gap-6">
+                  <div className="w-14 h-14 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-purple-600 group-hover:text-white transition-all">
+                    ✍️
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-black text-slate-800 uppercase tracking-tight">Theory Grading</h3>
+                    <p className="text-xs font-bold text-slate-500 mt-1">Grade theory/essay questions manually.</p>
+                  </div>
+                </div>
+                <span className="text-slate-300 group-hover:text-purple-600 transition-colors text-xl">→</span>
               </div>
             </Link>
 
@@ -208,12 +221,12 @@ export default function AdminDashboard() {
                     <span className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded text-[10px] font-black uppercase tracking-widest">Vigilant</span>
                   </div>
                   
-                  <div className="pt-4 p-8 bg-slate-50 rounded-2xl border-2 border-slate-100">
-                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Automated Cleanup</p>
-                     <p className="text-xs font-bold text-slate-600 leading-relaxed">
-                        The integrity module is scheduled to run in <span className="text-jamb-green">45:12</span>. All expired sessions will be force-submitted.
-                     </p>
-                  </div>
+                   <div className="pt-4 p-8 bg-slate-50 rounded-2xl border-2 border-slate-100">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Automated Cleanup</p>
+                      <p className="text-xs font-bold text-slate-600 leading-relaxed">
+                         Expired sessions are auto-detected every 60 seconds and force-submitted. Check the <Link href="/admin/results" className="text-brand-green underline">results page</Link> for all submissions.
+                      </p>
+                   </div>
                 </div>
              </div>
           </div>

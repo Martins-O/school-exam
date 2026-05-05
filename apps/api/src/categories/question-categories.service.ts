@@ -36,14 +36,20 @@ export class QuestionCategoriesService {
     return category;
   }
 
-  async update(id: string, dto: { name?: string; description?: string }): Promise<QuestionCategory> {
+  async update(id: string, dto: { name?: string; description?: string }, user?: any): Promise<QuestionCategory> {
     const category = await this.findOne(id);
+    if (user && user.role === 'teacher' && category.createdById !== user.id) {
+      throw new ForbiddenException('You can only modify your own categories');
+    }
     Object.assign(category, dto);
     return this.categoryRepo.save(category);
   }
 
-  async remove(id: string): Promise<void> {
+  async remove(id: string, user?: any): Promise<void> {
     const category = await this.findOne(id);
+    if (user && user.role === 'teacher' && category.createdById !== user.id) {
+      throw new ForbiddenException('You can only delete your own categories');
+    }
     await this.categoryRepo.remove(category);
   }
 

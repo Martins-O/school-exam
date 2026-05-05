@@ -28,13 +28,13 @@ export class QuestionCategoriesController {
   }
 
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() dto: UpdateCategoryDto) {
-    return this.categoriesService.update(id, dto);
+  async update(@Param('id') id: string, @Body() dto: UpdateCategoryDto, @Req() req) {
+    return this.categoriesService.update(id, dto, req.user);
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string) {
-    await this.categoriesService.remove(id);
+  async remove(@Param('id') id: string, @Req() req) {
+    await this.categoriesService.remove(id, req.user);
     return { message: 'Category deleted successfully' };
   }
 }

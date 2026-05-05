@@ -3,6 +3,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { ResultsService } from './results.service';
+import { StatsService } from './stats.service';
 
 @Controller('results')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -26,7 +27,10 @@ export class ResultsController {
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('super_admin', 'administrator')
 export class AdminResultsController {
-  constructor(private readonly resultsService: ResultsService) {}
+  constructor(
+    private readonly resultsService: ResultsService,
+    private readonly statsService: StatsService,
+  ) {}
 
   @Get()
   async getAllResults(@Req() req) {
@@ -36,5 +40,11 @@ export class AdminResultsController {
   @Get('exam/:examId')
   async getResultsByExam(@Param('examId') examId: string, @Req() req) {
     return this.resultsService.getResultsByExam(examId, req.user);
+  }
+
+  @Get('stats')
+  @Roles('super_admin', 'administrator', 'teacher')
+  async getStats(@Req() req) {
+    return this.statsService.getAdminStats();
   }
 }

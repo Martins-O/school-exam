@@ -28,6 +28,8 @@ export class ResultsService {
       totalMarks: s.totalMarks,
       percentage: s.totalMarks > 0 ? (s.score / s.totalMarks) * 100 : 0,
       status: s.status,
+      gradingStatus: s.gradingStatus,
+      finalScore: s.finalScore,
       submittedAt: s.submittedAt?.toISOString(),
       startedAt: s.startedAt.toISOString(),
     }));
@@ -84,6 +86,8 @@ export class ResultsService {
       totalMarks: submission.totalMarks,
       percentage: submission.totalMarks > 0 ? (submission.score / submission.totalMarks) * 100 : 0,
       status: submission.status,
+      gradingStatus: submission.gradingStatus,
+      finalScore: submission.finalScore,
       startedAt: submission.startedAt.toISOString(),
       submittedAt: submission.submittedAt?.toISOString(),
       violations: submission.violations,
@@ -127,6 +131,8 @@ export class ResultsService {
       totalMarks: s.totalMarks,
       percentage: s.totalMarks > 0 ? (s.score / s.totalMarks) * 100 : 0,
       status: s.status,
+      gradingStatus: s.gradingStatus,
+      finalScore: s.finalScore,
       submittedAt: s.submittedAt?.toISOString(),
       startedAt: s.startedAt.toISOString(),
     }));
@@ -198,6 +204,8 @@ export class ResultsService {
       totalMarks: s.totalMarks,
       percentage: s.totalMarks > 0 ? (s.score / s.totalMarks) * 100 : 0,
       status: s.status,
+      gradingStatus: s.gradingStatus,
+      finalScore: s.finalScore,
       submittedAt: s.submittedAt?.toISOString(),
       startedAt: s.startedAt.toISOString(),
     }));

@@ -14,13 +14,17 @@ export class Question {
   @Column({ type: 'text' })
   questionText: string;
 
-  @Column({ type: 'jsonb' })
-  options: Record<string, string>;
+  @Column({ type: 'enum', enum: ['objective', 'theory'], default: 'objective' })
+  @Expose({ groups: ['student', 'admin'] })
+  type: 'objective' | 'theory';
 
-  @Column({ type: 'char', length: 1 })
+  @Column({ type: 'jsonb', nullable: true })
+  options: Record<string, string> | null;
+
+  @Column({ type: 'char', length: 1, nullable: true })
   @Exclude()
   @Expose({ groups: ['admin'] })
-  correctAnswer: string;
+  correctAnswer: string | null;
 
   @Column({ type: 'int', default: 1 })
   marks: number;
@@ -29,8 +33,24 @@ export class Question {
   orderIndex: number;
 
   @ManyToMany(() => QuestionCategory)
-  @JoinTable()
+  @JoinTable({
+    name: 'question_question_categories',
+    joinColumn: { name: 'questionId' },
+    inverseJoinColumn: { name: 'questionCategoryId' },
+  })
   categories: QuestionCategory[];
+
+  @Column({ type: 'text', nullable: true })
+  @Expose({ groups: ['student', 'admin'] })
+  pdfAttachment: string | null;
+
+  @Column({ type: 'int', nullable: true })
+  @Expose({ groups: ['student', 'admin'] })
+  maxWordCount: number | null;
+
+  @Column({ type: 'text', nullable: true })
+  @Expose({ groups: ['student', 'admin'] })
+  passageText: string | null;
 
   @CreateDateColumn()
   createdAt: Date;

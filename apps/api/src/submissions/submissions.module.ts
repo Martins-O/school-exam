@@ -3,8 +3,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Submission } from './entities/submission.entity';
 import { ExamSessionService } from './exam-session.service';
 import { GraderService } from './grader.service';
+import { GradingService } from './grading.service';
 import { RandomizerService } from './randomizer.service';
 import { SubmissionsController } from './submissions.controller';
+import { GradingController } from './grading.controller';
 import { SessionCleanupTask } from './tasks/session-cleanup.task';
 import { TranscriptAutoUpdateService } from './transcript-auto-update.service';
 import { Exam } from '../exams/entities/exam.entity';
@@ -23,11 +25,12 @@ import { GatewayModule } from '../gateway/gateway.module';
   providers: [
     ExamSessionService,
     GraderService,
+    GradingService,
     RandomizerService,
     SessionCleanupTask,
     TranscriptAutoUpdateService,
   ],
-  controllers: [SubmissionsController],
+  controllers: [SubmissionsController, GradingController],
   exports: [ExamSessionService],
 })
 export class SubmissionsModule {}

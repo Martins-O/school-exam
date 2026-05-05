@@ -67,4 +67,24 @@ export class UsersService {
     }
     return query.getMany();
   }
+
+  async update(userId: string, data: { name?: string; email?: string; isActive?: boolean }): Promise<User> {
+    const user = await this.findById(userId);
+    
+    if (data.name !== undefined) user.name = data.name;
+    if (data.email !== undefined) {
+      const existing = await this.findByEmail(data.email);
+      if (existing && existing.id !== userId) {
+        throw new ConflictException('Email already in use');
+      }
+      user.email = data.email;
+    }
+    if (data.isActive !== undefined) user.isActive = data.isActive;
+
+    return this.userRepository.save(user);
+  }
+
+  async softDelete(userId: string): Promise<void> {
+    await this.update(userId, { isActive: false });
+  }
 }

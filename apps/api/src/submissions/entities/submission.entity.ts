@@ -45,6 +45,26 @@ export class Submission {
   @Column({ type: 'boolean', default: false })
   autoSubmitted: boolean;
 
+  @Column({ type: 'jsonb', default: {} })
+  questionScores: Record<string, {
+    score: number;
+    feedback: string;
+    gradedBy: string;
+    gradedAt: string;
+  }>;
+
+  @Column({ type: 'enum', enum: ['auto_graded', 'pending_manual', 'fully_graded'], default: 'auto_graded' })
+  gradingStatus: 'auto_graded' | 'pending_manual' | 'fully_graded';
+
+  @Column({ type: 'int', nullable: true })
+  finalScore: number | null;
+
+  @Column({ type: 'text', nullable: true })
+  gradingFeedback: string | null;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  gradedAt: Date | null;
+
   @CreateDateColumn()
   createdAt: Date;
 

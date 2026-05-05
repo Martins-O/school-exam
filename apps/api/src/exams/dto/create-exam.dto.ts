@@ -1,4 +1,4 @@
-import { IsString, MinLength, MaxLength, IsInt, Min, Max, IsOptional, IsDateString } from 'class-validator';
+import { IsString, MinLength, MaxLength, IsInt, Min, Max, IsOptional, IsDateString, IsBoolean, IsArray, IsUUID } from 'class-validator';
 
 export class CreateExamDto {
   @IsString()
@@ -24,8 +24,17 @@ export class CreateExamDto {
   endTime?: Date;
 
   @IsOptional()
+  @IsBoolean()
+  isPublished?: boolean;
+
+  @IsOptional()
   @IsInt()
   @Min(1)
   @Max(10)
   maxViolations?: number;
+
+  @IsOptional()
+  @IsArray()
+  @IsUUID('4', { each: true })
+  targetClassIds?: string[];
 }

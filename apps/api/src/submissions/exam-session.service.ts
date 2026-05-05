@@ -90,7 +90,7 @@ export class ExamSessionService {
     if (existing) {
       const questions = await this.questionRepo.find({
         where: { exam: { id: examId } },
-        select: ['id', 'questionText', 'options', 'marks'],
+        select: ['id', 'questionText', 'options', 'marks', 'type', 'maxWordCount', 'passageText'],
       });
 
       const questionMap = new Map(questions.map(q => [q.id, q]));
@@ -109,6 +109,9 @@ export class ExamSessionService {
           questionText: q.questionText,
           options: q.options,
           marks: q.marks,
+          type: q.type,
+          maxWordCount: q.maxWordCount,
+          passageText: q.passageText,
         })),
         maxViolations: exam.maxViolations,
       };
@@ -131,7 +134,7 @@ export class ExamSessionService {
 
     const questions = await this.questionRepo.find({
       where: { exam: { id: examId } },
-      select: ['id', 'questionText', 'options', 'marks'],
+      select: ['id', 'questionText', 'options', 'marks', 'type', 'maxWordCount', 'passageText'],
     });
 
     const questionOrder = this.randomizerService.shuffleQuestions(questions);
@@ -170,6 +173,9 @@ export class ExamSessionService {
             questionText: q.questionText,
             options: q.options,
             marks: q.marks,
+            type: q.type,
+            maxWordCount: q.maxWordCount,
+            passageText: q.passageText,
           })),
         maxViolations: exam.maxViolations,
       };
@@ -265,11 +271,24 @@ export class ExamSessionService {
       where: { exam: { id: submission.exam.id } },
     });
 
-    const { score, totalMarks } = this.graderService.grade(
+    const gradingResult = this.graderService.grade(
       submission.questionOrder,
       submission.answers,
       questions,
     );
+
+    const hasTheoryQuestions = gradingResult.theoryQuestionIds.length > 0;
+    const gradingStatus = hasTheoryQuestions ? 'pending_manual' : 'auto_graded';
+
+    const questionScores: Record<string, { score: number; feedback: string; gradedBy: string; gradedAt: string }> = {};
+    for (const qId of gradingResult.theoryQuestionIds) {
+      questionScores[qId] = { score: 0, feedback: '', gradedBy: '', gradedAt: '' };
+    }
+
+    let finalScore: number | null = null;
+    if (!hasTheoryQuestions) {
+      finalScore = gradingResult.score;
+    }
 
     const result = await this.submissionRepo
       .createQueryBuilder()
@@ -277,10 +296,13 @@ export class ExamSessionService {
       .set({
         status: 'submitted',
         submittedAt: new Date(),
-        score,
-        totalMarks,
+        score: gradingResult.score,
+        totalMarks: gradingResult.totalMarks,
         answers: submission.answers,
         flaggedQuestions: submission.flaggedQuestions,
+        gradingStatus,
+        questionScores,
+        finalScore,
       })
       .where('id = :id AND status = :status', {
         id: submission.id,
@@ -295,21 +317,23 @@ export class ExamSessionService {
     this.examGateway.emitSubmission(submission.exam.id, {
       submissionId: submission.id,
       studentName: submission.student.name,
-      score,
-      totalMarks,
+      score: gradingResult.score,
+      totalMarks: gradingResult.totalMarks,
+      gradingStatus,
       submittedAt: new Date().toISOString(),
     });
 
-    // Auto-update transcript after submission
     this.transcriptAutoUpdateService.updateTranscriptAfterSubmission(submission.id).catch(err => {
       console.error('Failed to update transcript after submission:', err);
     });
 
     return {
-      score,
-      totalMarks,
-      percentage: totalMarks > 0 ? (score / totalMarks) * 100 : 0,
+      score: gradingResult.score,
+      totalMarks: gradingResult.totalMarks,
+      percentage: gradingResult.totalMarks > 0 ? (gradingResult.score / gradingResult.totalMarks) * 100 : 0,
       submittedAt: new Date().toISOString(),
+      gradingStatus,
+      hasTheoryQuestions,
     };
   }
 
@@ -326,11 +350,24 @@ export class ExamSessionService {
       where: { exam: { id: exam.id } },
     });
 
-    const { score, totalMarks } = this.graderService.grade(
+    const gradingResult = this.graderService.grade(
       submission.questionOrder,
       submission.answers,
       questions,
     );
+
+    const hasTheoryQuestions = gradingResult.theoryQuestionIds.length > 0;
+    const gradingStatus = hasTheoryQuestions ? 'pending_manual' : 'auto_graded';
+
+    const questionScores: Record<string, { score: number; feedback: string; gradedBy: string; gradedAt: string }> = {};
+    for (const qId of gradingResult.theoryQuestionIds) {
+      questionScores[qId] = { score: 0, feedback: '', gradedBy: '', gradedAt: '' };
+    }
+
+    let finalScore: number | null = null;
+    if (!hasTheoryQuestions) {
+      finalScore = gradingResult.score;
+    }
 
     const newStatus =
       reason === 'timeout' ? 'timed_out' : 'force_submitted';
@@ -341,9 +378,12 @@ export class ExamSessionService {
       .set({
         status: newStatus,
         submittedAt: new Date(),
-        score,
-        totalMarks,
+        score: gradingResult.score,
+        totalMarks: gradingResult.totalMarks,
         autoSubmitted: true,
+        gradingStatus,
+        questionScores,
+        finalScore,
       })
       .where('id = :id AND status = :status', {
         id: submission.id,
@@ -355,7 +395,6 @@ export class ExamSessionService {
       return this.submissionRepo.findOne({ where: { id: submission.id } });
     }
 
-    // Auto-update transcript after forced submission
     this.transcriptAutoUpdateService.updateTranscriptAfterSubmission(submission.id).catch(err => {
       console.error('Failed to update transcript after forced submission:', err);
     });

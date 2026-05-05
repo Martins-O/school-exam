@@ -70,12 +70,12 @@ export class ClassesService {
       throw new BadRequestException('User is not a student');
     }
 
-    // Check if already enrolled
-    const existing = await this.classStudentRepo.findOne({
-      where: { classId, studentId },
+    // Check if student is already enrolled in any class
+    const existingEnrollment = await this.classStudentRepo.findOne({
+      where: { studentId },
     });
-    if (existing) {
-      throw new BadRequestException('Student already enrolled in this class');
+    if (existingEnrollment) {
+      throw new BadRequestException('Student is already enrolled in a class. Each student can only belong to one class.');
     }
 
     // Enroll student

@@ -18,7 +18,7 @@ export class ClassStudent {
   @JoinColumn({ name: 'studentId' })
   student: User;
 
-  @Column()
+  @Column({ unique: true })
   studentId: string;
 
   @CreateDateColumn()

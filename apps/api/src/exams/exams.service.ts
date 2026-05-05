@@ -29,10 +29,30 @@ export class ExamsService {
     return this.examRepository.save(exam);
   }
 
-  async findAll(): Promise<Exam[]> {
+  async findAll(user?: any): Promise<Exam[]> {
+    if (user && user.role === 'teacher') {
+      return this.examRepository.find({
+        where: { createdBy: { id: user.id } },
+        relations: ['createdBy', 'targetClasses'],
+      });
+    }
     return this.examRepository.find({
-      relations: ['createdBy'],
+      relations: ['createdBy', 'targetClasses'],
     });
+  }
+
+  async findByTeacher(teacherId: string, classId?: string): Promise<Exam[]> {
+    const qb = this.examRepository
+      .createQueryBuilder('exam')
+      .leftJoinAndSelect('exam.createdBy', 'createdBy')
+      .leftJoinAndSelect('exam.targetClasses', 'targetClasses')
+      .where('exam.createdById = :teacherId', { teacherId });
+
+    if (classId) {
+      qb.andWhere('targetClasses.id = :classId', { classId });
+    }
+
+    return qb.getMany();
   }
 
   async findOne(id: string): Promise<Exam> {
@@ -69,8 +89,13 @@ export class ExamsService {
     await this.examRepository.remove(exam);
   }
 
-  async publish(id: string): Promise<Exam> {
+  async publish(id: string, user?: any): Promise<Exam> {
     const exam = await this.findOne(id);
+
+    // Teachers can only publish their own exams
+    if (user && user.role === 'teacher' && exam.createdBy.id !== user.id) {
+      throw new ForbiddenException('You can only publish your own exams');
+    }
 
     const questionCount = await this.questionRepository
       .createQueryBuilder('question')

@@ -7,6 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Exam } from './entities/exam.entity';
 import { Question } from '../questions/entities/question.entity';
+import { Submission } from '../submissions/entities/submission.entity';
 import { ClassesService } from '../classes/classes.service';
 
 @Controller('student/exams')
@@ -19,6 +20,8 @@ export class StudentExamsController {
     private readonly examRepository: Repository<Exam>,
     @InjectRepository(Question)
     private readonly questionRepository: Repository<Question>,
+    @InjectRepository(Submission)
+    private readonly submissionRepository: Repository<Submission>,
     private readonly classesService: ClassesService,
   ) {}
 
@@ -38,9 +41,10 @@ export class StudentExamsController {
       .where('exam.isPublished = :published', { published: true });
 
     // If student has classes, filter by those classes
+    // Exams with no target classes assigned are available to all students
     if (classIds.length > 0) {
       query.andWhere(
-        '(targetClass.id IN (:...classIds) OR exam.targetClasses IS NULL)',
+        '(targetClass.id IN (:...classIds) OR exam.id NOT IN (SELECT exam_target_classes."examId" FROM exam_target_classes))',
         { classIds }
       );
     }
@@ -53,14 +57,12 @@ export class StudentExamsController {
       if (exam.endTime && exam.endTime < now) continue;
 
       // Check if student already has a submission
-      const existingSubmission = await this.examRepository.manager
-        .createQueryBuilder()
-        .select('1')
-        .from('submissions', 's')
+      const existingSubmission = await this.submissionRepository
+        .createQueryBuilder('s')
         .where('s.examId = :examId', { examId: exam.id })
         .andWhere('s.studentId = :studentId', { studentId })
-        .andWhere('s.status IN (:...statuses)', { status: ['in_progress', 'submitted', 'timed_out', 'force_submitted'] })
-        .getRawOne();
+        .andWhere('s.status IN (:...statuses)', { statuses: ['in_progress', 'submitted', 'timed_out', 'force_submitted'] })
+        .getOne();
 
       if (existingSubmission) continue;
 

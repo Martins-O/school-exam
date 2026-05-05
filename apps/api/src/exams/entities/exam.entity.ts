@@ -33,7 +33,11 @@ export class Exam {
   createdBy: User;
 
   @ManyToMany(() => Class)
-  @JoinTable()
+  @JoinTable({
+    name: 'exam_target_classes',
+    joinColumn: { name: 'examId' },
+    inverseJoinColumn: { name: 'classId' },
+  })
   targetClasses: Class[];
 
   @CreateDateColumn()

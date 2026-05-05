@@ -30,8 +30,8 @@ export class ExamsController {
   }
 
   @Get()
-  async findAll() {
-    return this.examsService.findAll();
+  async findAll(@Req() req) {
+    return this.examsService.findAll(req.user);
   }
 
   @Get(':id')
@@ -40,8 +40,8 @@ export class ExamsController {
   }
 
   @Patch(':id/publish')
-  async publish(@Param('id') id: string) {
-    return this.examsService.publish(id);
+  async publish(@Param('id') id: string, @Req() req) {
+    return this.examsService.publish(id, req.user);
   }
 
   @Patch(':id/classes')

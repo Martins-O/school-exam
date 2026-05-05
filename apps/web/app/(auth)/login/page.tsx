@@ -26,6 +26,8 @@ export default function LoginPage() {
       const role = res.data.user.role;
       if (role === 'super_admin' || role === 'administrator') {
         router.push('/admin/dashboard');
+      } else if (role === 'teacher') {
+        router.push('/teacher/dashboard');
       } else if (role === 'parent') {
         router.push('/parent');
       } else {
@@ -44,11 +46,14 @@ export default function LoginPage() {
       <div className="bg-white border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-4">
-            <div className="w-10 h-10 bg-jamb-green rounded flex items-center justify-center font-black text-white text-xl border-b-2 border-green-900">
-              J
+            <div className="w-10 h-10 bg-brand-green rounded flex items-center justify-center border-b-2 border-green-900">
+              <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+              </svg>
             </div>
             <div className="flex flex-col">
-              <span className="text-lg font-black tracking-tighter leading-tight text-jamb-green">JAMB</span>
+              <span className="text-lg font-black tracking-tighter leading-tight text-brand-green">CBT Exam</span>
               <span className="text-[8px] font-bold uppercase tracking-[0.2em] text-slate-400">Portal Security Layer</span>
             </div>
           </Link>
@@ -69,7 +74,7 @@ export default function LoginPage() {
           <div className="portal-card p-10 bg-white">
             <form onSubmit={handleSubmit} className="space-y-8">
               <div className="space-y-2">
-                <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-jamb-green">
+                <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-brand-green">
                   Candidate Email
                 </label>
                 <div className="relative">
@@ -78,15 +83,15 @@ export default function LoginPage() {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl pl-12 pr-6 py-4 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-green-100 focus:border-jamb-green/40 transition-all font-bold"
-                    placeholder="e.g. cand@jamb.gov.ng"
+                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl pl-12 pr-6 py-4 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-green-100 focus:border-brand-green/40 transition-all font-bold"
+                    placeholder="e.g. student@cbt.edu"
                     required
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-jamb-green">
+                <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-brand-green">
                   Profile Password
                 </label>
                 <div className="relative">
@@ -95,7 +100,7 @@ export default function LoginPage() {
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl pl-12 pr-6 py-4 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-green-100 focus:border-jamb-green/40 transition-all font-bold"
+                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl pl-12 pr-6 py-4 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-green-100 focus:border-brand-green/40 transition-all font-bold"
                     placeholder="••••••••••••"
                     required
                   />
@@ -106,7 +111,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full bg-jamb-green hover:bg-green-800 text-white font-black py-5 rounded-xl transition-all shadow-xl shadow-green-900/20 active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none uppercase text-xs tracking-[0.2em]"
+                  className="w-full bg-brand-green hover:bg-green-800 text-white font-black py-5 rounded-xl transition-all shadow-xl shadow-green-900/20 active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none uppercase text-xs tracking-[0.2em]"
                 >
                   {isLoading ? 'Establishing Secure Link...' : 'Sign In To Portal'}
                 </button>
@@ -121,7 +126,7 @@ export default function LoginPage() {
           </div>
 
           <div className="mt-12 text-center">
-            <Link href="/" className="text-[10px] font-black text-jamb-green uppercase tracking-[0.3em] hover:underline">
+            <Link href="/" className="text-[10px] font-black text-brand-green uppercase tracking-[0.3em] hover:underline">
               ← Return to Landing Page
             </Link>
           </div>

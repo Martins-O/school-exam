@@ -27,6 +27,7 @@ export class AddStudentIdUniqueConstraint1777978173969 implements MigrationInter
         await queryRunner.query(`ALTER TABLE "class_students" ADD CONSTRAINT "UQ_4e9a9986dd87d6448440f840144" UNIQUE ("studentId")`);
         await queryRunner.query(`CREATE INDEX "IDX_5e348c17d74ef44ff669a7ade7" ON "exam_target_classes" ("examId") `);
         await queryRunner.query(`CREATE INDEX "IDX_f6ef7b91d435937d5b82b0d277" ON "exam_target_classes" ("classId") `);
+        await queryRunner.query(`ALTER TABLE "users" ADD COLUMN "createdById" uuid`);
         await queryRunner.query(`ALTER TABLE "users" ADD CONSTRAINT "FK_51d635f1d983d505fb5a2f44c52" FOREIGN KEY ("createdById") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE "transcripts" ADD CONSTRAINT "FK_fafa206fa28552793ed9e3f3bd5" FOREIGN KEY ("studentId") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE "transcripts" ADD CONSTRAINT "FK_f0e77dcedb3de39f5539c96b01f" FOREIGN KEY ("generatedById") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);

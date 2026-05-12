@@ -30,14 +30,22 @@ export class ClassesService {
   }
 
   async findAll(): Promise<Class[]> {
-    return this.classRepo.find({ relations: ['createdBy'] });
+    return this.classRepo
+      .createQueryBuilder('c')
+      .leftJoinAndSelect('c.createdBy', 'createdBy')
+      .loadRelationCountAndMap('c.studentCount', 'c.classStudents')
+      .loadRelationCountAndMap('c.teacherCount', 'c.teacherClasses')
+      .getMany();
   }
 
   async findOne(id: string): Promise<Class> {
-    const classEntity = await this.classRepo.findOne({
-      where: { id },
-      relations: ['createdBy'],
-    });
+    const classEntity = await this.classRepo
+      .createQueryBuilder('c')
+      .leftJoinAndSelect('c.createdBy', 'createdBy')
+      .loadRelationCountAndMap('c.studentCount', 'c.classStudents')
+      .loadRelationCountAndMap('c.teacherCount', 'c.teacherClasses')
+      .where('c.id = :id', { id })
+      .getOne();
     if (!classEntity) {
       throw new NotFoundException('Class not found');
     }

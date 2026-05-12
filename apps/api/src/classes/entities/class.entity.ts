@@ -1,5 +1,7 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
+import { ClassStudent } from './class-student.entity';
+import { TeacherClass } from './teacher-class.entity';
 
 @Entity('classes')
 export class Class {
@@ -7,7 +9,7 @@ export class Class {
   id: string;
 
   @Column({ length: 100 })
-  name: string; // e.g., "Grade 10A", "JSS 2"
+  name: string;
 
   @Column({ type: 'text', nullable: true })
   description: string;
@@ -18,6 +20,12 @@ export class Class {
 
   @Column()
   createdById: string;
+
+  @OneToMany(() => ClassStudent, cs => cs.class)
+  classStudents: ClassStudent[];
+
+  @OneToMany(() => TeacherClass, tc => tc.class)
+  teacherClasses: TeacherClass[];
 
   @CreateDateColumn()
   createdAt: Date;

@@ -9,6 +9,7 @@ import { Server, Socket } from 'socket.io';
 import { UseGuards, Logger } from '@nestjs/common';
 import { WsJwtGuard } from '../auth/ws-jwt.guard'; // I might need to create this
 
+@UseGuards(WsJwtGuard)
 @WebSocketGateway({
   cors: {
     origin: process.env.FRONTEND_URL,

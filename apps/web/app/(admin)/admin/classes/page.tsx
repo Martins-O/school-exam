@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
+import AdminHeader from '@/components/admin/AdminHeader';
 
 interface Class {
   id: string;
@@ -38,7 +39,7 @@ export default function AdminClassesPage() {
   const [selectedTeacher, setSelectedTeacher] = useState('');
   const router = useRouter();
 
-  useEffect(() => {
+  const refreshData = () => {
     Promise.all([
       api.get('/classes').catch(() => ({ data: [] })),
       api.get('/users?role=student').catch(() => ({ data: [] })),
@@ -47,8 +48,12 @@ export default function AdminClassesPage() {
       setClasses(classesRes.data);
       setStudents(studentsRes.data);
       setTeachers(teachersRes.data);
-      setLoading(false);
     });
+  };
+
+  useEffect(() => {
+    refreshData();
+    setLoading(false);
   }, []);
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -59,7 +64,7 @@ export default function AdminClassesPage() {
       setShowCreate(false);
       setName('');
       setDescription('');
-      window.location.reload();
+      refreshData();
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Creation failed');
     }
@@ -70,7 +75,7 @@ export default function AdminClassesPage() {
     try {
       await api.delete(`/classes/${id}`);
       toast.success('Class deleted');
-      window.location.reload();
+      refreshData();
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Deletion failed');
     }
@@ -83,7 +88,7 @@ export default function AdminClassesPage() {
       toast.success('Student enrolled');
       setShowEnroll(false);
       setSelectedStudent('');
-      window.location.reload();
+      refreshData();
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Enrollment failed');
     }
@@ -96,7 +101,7 @@ export default function AdminClassesPage() {
       toast.success('Teacher assigned');
       setShowAssignTeacher(false);
       setSelectedTeacher('');
-      window.location.reload();
+      refreshData();
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Assignment failed');
     }
@@ -109,32 +114,18 @@ export default function AdminClassesPage() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans selection:bg-green-100">
-      <header className="cbt-header relative z-10">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <Link href="/admin/dashboard" className="flex items-center gap-4 group">
-            <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center border-b-2 border-slate-300">
-              <svg className="w-5 h-5 text-brand-green" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-              </svg>
-            </div>
-            <span className="text-xl font-black tracking-tight flex items-center gap-2">
-              CBT Exam <span className="text-xs font-bold text-brand-gold/80 block uppercase tracking-widest border-l border-white/20 pl-4 mt-1">Classes</span>
-            </span>
-          </Link>
-          <div className="flex items-center gap-6">
-            <Link href="/admin/dashboard" className="text-[10px] font-black uppercase tracking-widest hover:text-brand-gold transition-colors">BACK TO DASHBOARD</Link>
-            <button 
-              onClick={() => setShowCreate(true)}
-              className="px-6 py-2 bg-brand-gold text-brand-green font-black rounded-lg text-xs uppercase tracking-widest shadow-lg shadow-black/20 hover:scale-105 transition-all"
-            >
-              + New Class
-            </button>
-          </div>
-        </div>
-      </header>
-
+    <>
+      <AdminHeader
+        subtitle="Classes"
+        actions={
+          <button
+            onClick={() => setShowCreate(true)}
+            className="px-6 py-2 bg-brand-gold text-brand-green font-black rounded-lg text-xs uppercase tracking-widest shadow-lg shadow-black/20 hover:scale-105 transition-all"
+          >
+            + New Class
+          </button>
+        }
+      />
       <main className="max-w-7xl mx-auto px-6 py-12">
         <div className="mb-12 flex items-center justify-between">
           <div>
@@ -317,6 +308,6 @@ export default function AdminClassesPage() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

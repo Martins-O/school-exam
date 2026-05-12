@@ -1123,6 +1123,15 @@ REDIS_URL=redis://localhost:6379
 
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:3001/api/v1
+NEXT_PUBLIC_WS_URL=http://localhost:3001
+```
+
+### Optional
+
+```env
+CLOUDINARY_CLOUD_NAME=<cloudinary-cloud-name>
+CLOUDINARY_API_KEY=<cloudinary-api-key>
+CLOUDINARY_API_SECRET=<cloudinary-api-secret>
 ```
 
 ### Docker Compose services

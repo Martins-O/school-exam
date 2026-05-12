@@ -29,7 +29,8 @@ export default function AdminMonitorPage() {
       return;
     }
 
-    const socket = io(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/exam-monitoring`, {
+    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:3001';
+    const socket = io(`${wsUrl}/exam-monitoring`, {
       auth: { token },
     });
 

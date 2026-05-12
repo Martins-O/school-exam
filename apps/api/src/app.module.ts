@@ -48,6 +48,9 @@ import { HealthController } from './health.controller';
         DB_NAME: Joi.string().required(),
         JWT_SECRET: Joi.string().min(64).required(),
         FRONTEND_URL: Joi.string().uri().required(),
+        CLOUDINARY_CLOUD_NAME: Joi.string().optional(),
+        CLOUDINARY_API_KEY: Joi.string().optional(),
+        CLOUDINARY_API_SECRET: Joi.string().optional(),
       }),
     }),
     TypeOrmModule.forRootAsync({

@@ -1,18 +1,48 @@
 import { create } from 'zustand';
 
+interface Question {
+  id: string;
+  questionText: string;
+  options: Record<string, string>;
+  marks: number;
+  type?: 'objective' | 'theory';
+  maxWordCount?: number | null;
+  passageText?: string | null;
+}
+
+type ExamStatus = 'idle' | 'loading' | 'active' | 'submitting' | 'submitted' | 'timed_out';
+
 interface ExamState {
   submissionId: string | null;
-  questions: { id: string; questionText: string; options: Record<string, string>; marks: number }[];
+  questions: Question[];
   answers: Record<string, string>;
   flaggedQuestions: string[];
   remainingSeconds: number;
-  status: 'idle' | 'in_progress' | 'submitted' | 'timed_out';
+  status: ExamStatus;
   currentIndex: number;
+  violations: number;
+  maxViolations: number;
+  examTitle: string;
+  startedAt: string;
+  durationMinutes: number;
 
   setAnswer: (questionId: string, answer: string) => void;
+  setAnswers: (answers: Record<string, string>) => void;
+  mergeAnswers: (answers: Record<string, string>) => void;
   toggleFlag: (questionId: string) => void;
   setRemainingSeconds: (seconds: number) => void;
-  setExam: (data: { submissionId: string; questions: { id: string; questionText: string; options: Record<string, string>; marks: number }[]; remainingSeconds: number }) => void;
+  setStatus: (status: ExamStatus) => void;
+  setViolations: (count: number) => void;
+  incrementViolations: () => void;
+  setExam: (data: {
+    submissionId: string;
+    questions: Question[];
+    remainingSeconds: number;
+    examTitle: string;
+    startedAt: string;
+    durationMinutes: number;
+    maxViolations?: number;
+  }) => void;
   resetExam: () => void;
   setCurrentIndex: (index: number) => void;
 }
@@ -25,10 +55,22 @@ export const useExamStore = create<ExamState>()((set) => ({
   remainingSeconds: 0,
   status: 'idle',
   currentIndex: 0,
+  violations: 0,
+  maxViolations: 3,
+  examTitle: '',
+  startedAt: '',
+  durationMinutes: 0,
 
   setAnswer: (questionId, answer) =>
     set((state) => ({
       answers: { ...state.answers, [questionId]: answer },
+    })),
+
+  setAnswers: (answers) => set({ answers }),
+
+  mergeAnswers: (answers) =>
+    set((state) => ({
+      answers: { ...state.answers, ...answers },
     })),
 
   toggleFlag: (questionId) =>
@@ -40,14 +82,26 @@ export const useExamStore = create<ExamState>()((set) => ({
 
   setRemainingSeconds: (seconds) => set({ remainingSeconds: seconds }),
 
+  setStatus: (status) => set({ status }),
+
+  setViolations: (count) => set({ violations: count }),
+
+  incrementViolations: () =>
+    set((state) => ({ violations: state.violations + 1 })),
+
   setExam: (data) =>
     set({
       submissionId: data.submissionId,
       questions: data.questions,
       remainingSeconds: data.remainingSeconds,
-      status: 'in_progress' as const,
+      examTitle: data.examTitle,
+      startedAt: data.startedAt,
+      durationMinutes: data.durationMinutes,
+      maxViolations: data.maxViolations ?? 3,
+      status: 'active',
       answers: {},
       flaggedQuestions: [],
+      violations: 0,
       currentIndex: 0,
     }),
 
@@ -60,6 +114,11 @@ export const useExamStore = create<ExamState>()((set) => ({
       remainingSeconds: 0,
       status: 'idle',
       currentIndex: 0,
+      violations: 0,
+      maxViolations: 3,
+      examTitle: '',
+      startedAt: '',
+      durationMinutes: 0,
     }),
 
   setCurrentIndex: (index) => set({ currentIndex: index }),

@@ -5,7 +5,7 @@ ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 echo "=== Cleaning up stale containers and port conflicts ==="
 docker compose -f "$ROOT_DIR/docker-compose.yml" down 2>/dev/null || true
-for port in 3000 3001 6379; do
+for port in 3000 3001; do
   lsof -ti:$port 2>/dev/null | xargs kill -9 2>/dev/null || true
 done
 

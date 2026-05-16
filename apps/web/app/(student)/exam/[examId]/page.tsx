@@ -24,7 +24,7 @@ export default function ExamRoomPage() {
     setStatus, incrementViolations, setExam, setCurrentIndex,
   } = useExamStore();
 
-  const startExam = async () => {
+  const startExam = useCallback(async () => {
     try {
       const res = await api.post(`/submissions/start/${examId}`);
       setExam(res.data);
@@ -37,7 +37,7 @@ export default function ExamRoomPage() {
       toast.error(err.response?.data?.message || 'Ineligibility detected');
       router.push('/dashboard');
     }
-  };
+  }, [examId, setExam, router]);
 
   useEffect(() => {
     startExam();
@@ -45,7 +45,7 @@ export default function ExamRoomPage() {
       if (autosaveTimer.current) clearInterval(autosaveTimer.current);
       if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
     };
-  }, [examId]);
+  }, [startExam]);
 
   const saveBatch = useCallback(async (final = false) => {
     if (!submissionId || status !== 'active') return;
@@ -64,7 +64,7 @@ export default function ExamRoomPage() {
     } catch {
       if (!final) toast.error('Sync failed. Reconnecting...', { id: 'sync' });
     }
-  }, [submissionId, status, router]);
+  }, [submissionId, status, setRemainingSeconds, setStatus, router]);
 
   const startAutosaveLoop = useCallback(() => {
     autosaveTimer.current = setInterval(() => saveBatch(), 5000);
@@ -90,21 +90,21 @@ export default function ExamRoomPage() {
     }
   };
 
-  const reportViolation = useCallback(async () => {
+  const reportViolation = useCallback(async (type: 'tab_switch' | 'fullscreen_exit') => {
     if (!submissionId || status !== 'active') return;
-    incrementViolations();
     try {
-      await api.post(`/submissions/${submissionId}/violation`);
+      await api.post(`/submissions/${submissionId}/violation`, { type });
+      incrementViolations();
       toast.error('SECURITY ALERT: ACTION RECORDED', { icon: '🛡️', duration: 4000 });
     } catch {}
   }, [submissionId, status, incrementViolations]);
 
   const setupAntiCheat = useCallback(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden' && status === 'active') reportViolation();
+      if (document.visibilityState === 'hidden' && status === 'active') reportViolation('tab_switch');
     };
     const handleFullscreenChange = () => {
-      if (!document.fullscreenElement && status === 'active') reportViolation();
+      if (!document.fullscreenElement && status === 'active') reportViolation('fullscreen_exit');
     };
     const handleKey = (e: KeyboardEvent) => {
       if (
@@ -113,7 +113,7 @@ export default function ExamRoomPage() {
         (e.ctrlKey && e.shiftKey && e.key === 'I')
       ) {
         e.preventDefault();
-        if (status === 'active') reportViolation();
+        if (status === 'active') reportViolation('tab_switch');
       }
     };
     const handleContext = (e: MouseEvent) => e.preventDefault();

@@ -18,8 +18,8 @@ export class ParentsController {
 
   @Post('link-student')
   @Roles('super_admin', 'administrator')
-  async linkStudent(@Body() dto: LinkStudentDto, @Req() req) {
-    await this.parentsService.linkStudent(dto.studentId, req.user.id);
+  async linkStudent(@Body() dto: LinkStudentDto) {
+    await this.parentsService.linkStudent(dto.parentId, dto.studentId);
     return { message: 'Parent linked to student successfully' };
   }
 

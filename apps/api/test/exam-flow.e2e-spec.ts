@@ -38,18 +38,12 @@ describe('Exam Flow (e2e)', () => {
     await app.close();
   });
 
-  it('Step 1: Register Admin', async () => {
-    const res = await request(app.getHttpServer())
-      .post('/api/v1/auth/register')
-      .send({
-        name: 'Admin User',
-        email: 'admin_e2e@test.com',
-        password: 'password123',
-      });
-    expect(res.status).toBe(201);
-    
-    // Manually promote to super_admin since register defaults to student
-    await dataSource.query("UPDATE users SET role = 'super_admin' WHERE email = 'admin_e2e@test.com'");
+  it('Step 1: Create Admin via direct SQL and login', async () => {
+    await dataSource.query(`
+      INSERT INTO "users" ("name", "email", "password", "role", "isActive")
+      VALUES ('Admin User', 'admin_e2e@test.com', '$2b$12$tsNEYLtHMdmhde82uf30kezJOpaM.EFaAWdXyBF6xMeeB7sIE7LIC', 'super_admin', true)
+      ON CONFLICT ("email") DO NOTHING
+    `);
 
     const loginRes = await request(app.getHttpServer())
       .post('/api/v1/auth/login')
@@ -95,13 +89,23 @@ describe('Exam Flow (e2e)', () => {
     expect(res.body.isPublished).toBe(true);
   });
 
-  it('Step 5: Register & Login Student', async () => {
+  it('Step 5: Create Student via Admin API & Login', async () => {
+    // Admin creates a class first, then adds student to it
+    const classRes = await request(app.getHttpServer())
+      .post('/api/v1/classes')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ name: 'E2E Test Class', description: 'Temp class for e2e' });
+    const classId = classRes.body.id;
+
     await request(app.getHttpServer())
-      .post('/api/v1/auth/register')
+      .post('/api/v1/users')
+      .set('Authorization', `Bearer ${adminToken}`)
       .send({
         name: 'Student User',
         email: 'student_e2e@test.com',
         password: 'password123',
+        role: 'student',
+        classIds: [classId],
       });
 
     const loginRes = await request(app.getHttpServer())

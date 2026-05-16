@@ -146,6 +146,13 @@ export class TranscriptsService {
     return transcript;
   }
 
+  async findAll(): Promise<Transcript[]> {
+    return this.transcriptRepo.find({
+      relations: ['student', 'generatedBy'],
+      order: { createdAt: 'DESC' },
+    });
+  }
+
   async finalize(id: string, adminUser: any): Promise<Transcript> {
     const transcript = await this.findOne(id, adminUser);
     transcript.isFinalized = true;

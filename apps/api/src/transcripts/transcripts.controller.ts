@@ -16,7 +16,14 @@ export class TranscriptsController {
     return this.transcriptsService.generate(dto, req.user);
   }
 
+  @Get()
+  @Roles('super_admin', 'administrator')
+  async findAll() {
+    return this.transcriptsService.findAll();
+  }
+
   @Get('student/:studentId')
+  @Roles('super_admin', 'administrator', 'student', 'parent')
   async findByStudent(@Param('studentId') studentId: string, @Req() req) {
     return this.transcriptsService.findByStudent(studentId, req.user);
   }

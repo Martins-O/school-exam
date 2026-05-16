@@ -1,8 +1,9 @@
-import { Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDateColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDateColumn, Column, Unique } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Class } from './class.entity';
 
 @Entity('class_students')
+@Unique(['classId', 'studentId'])
 export class ClassStudent {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -18,7 +19,7 @@ export class ClassStudent {
   @JoinColumn({ name: 'studentId' })
   student: User;
 
-  @Column({ unique: true })
+  @Column()
   studentId: string;
 
   @CreateDateColumn()

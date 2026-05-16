@@ -43,7 +43,7 @@ export class AdminResultsController {
   }
 
   @Get('stats')
-  @Roles('super_admin', 'administrator', 'teacher')
+  @Roles('super_admin', 'administrator')
   async getStats(@Req() req) {
     return this.statsService.getAdminStats();
   }

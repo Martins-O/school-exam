@@ -23,7 +23,7 @@ export default function AdminMonitorPage() {
 
   useEffect(() => {
     // 1. Join monitoring room
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('cbt_token');
     if (!token) {
       router.push('/login');
       return;

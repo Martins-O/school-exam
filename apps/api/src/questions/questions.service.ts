@@ -269,7 +269,7 @@ export class QuestionsService {
   }
 
   async extractPdfQuestions(examId: string, file: Express.Multer.File): Promise<{
-    pdfUrl: string;
+    pdfUrl?: string;
     extractedQuestions: Array<{
       type: 'objective' | 'theory';
       questionText: string;
@@ -285,14 +285,20 @@ export class QuestionsService {
       throw new NotFoundException('Exam not found');
     }
 
-    const { secure_url } = await this.cloudinaryService.uploadFile(file, 'cbt-exams/pdfs');
+    let pdfUrl: string | null = null;
+    try {
+      const result = await this.cloudinaryService.uploadFile(file, 'cbt-exams/pdfs');
+      pdfUrl = result.secure_url;
+    } catch {
+      // Cloudinary not configured — skip upload, still extract text
+    }
 
     const pdfData = await pdfParse(file.buffer);
     const rawText = pdfData.text;
 
     const extractedQuestions = this.parseExtractedText(rawText);
 
-    return { pdfUrl: secure_url, extractedQuestions };
+    return { ...(pdfUrl ? { pdfUrl } : {}), extractedQuestions };
   }
 
   private parseExtractedText(text: string): Array<{

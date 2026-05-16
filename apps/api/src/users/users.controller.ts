@@ -29,15 +29,6 @@ export class UsersController {
       throw new ForbiddenException('Only super admins can create super admin accounts');
     }
 
-    if (createUserDto.role === 'student') {
-      if (!createUserDto.classIds || createUserDto.classIds.length === 0) {
-        throw new ForbiddenException('Students must be assigned to a class');
-      }
-      if (createUserDto.classIds.length > 1) {
-        throw new ForbiddenException('Students can only be assigned to one class');
-      }
-    }
-
     if (createUserDto.role === 'parent') {
       const hasExisting = createUserDto.studentIds && createUserDto.studentIds.length > 0;
       const hasNew = createUserDto.newStudents && createUserDto.newStudents.length > 0;
@@ -57,7 +48,7 @@ export class UsersController {
       await this.classesService.addStudent(createUserDto.classIds[0], user.id);
     }
 
-    if (createUserDto.role === 'teacher' && createUserDto.classIds) {
+    if (createUserDto.role === 'teacher' && createUserDto.classIds && createUserDto.classIds.length > 0) {
       for (const classId of createUserDto.classIds) {
         try {
           await this.classesService.assignTeacher(classId, user.id);

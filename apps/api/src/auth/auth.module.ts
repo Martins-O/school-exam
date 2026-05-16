@@ -25,11 +25,6 @@ import { UsersModule } from '../users/users.module';
         ttl: 60,
         limit: 10,
       },
-      {
-        name: 'register',
-        ttl: 60,
-        limit: 5,
-      },
     ]),
   ],
   providers: [AuthService, JwtStrategy],

@@ -43,6 +43,7 @@ export default function TeacherDashboard() {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
+  const clearAuth = useAuthStore((s) => s.clearAuth);
 
   useEffect(() => {
     loadData();
@@ -92,8 +93,14 @@ export default function TeacherDashboard() {
               <span className="text-[10px] font-bold text-brand-gold block uppercase tracking-widest leading-none mt-1">TEACHER</span>
             </div>
             <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center border border-white/20">
-              👤
+               👤
             </div>
+            <button
+              onClick={() => { clearAuth(); window.location.href = '/login'; }}
+              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-black rounded-lg text-[10px] uppercase tracking-widest transition-all"
+            >
+              Log Out
+            </button>
           </div>
         </div>
       </header>

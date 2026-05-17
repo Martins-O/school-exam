@@ -905,11 +905,12 @@ The `RolesGuard` reads the role from `req.user.role` (populated by `JwtStrategy`
 
 ### Register endpoint
 
-Registration is open (any user can register). Role defaults to `'student'`. 
+Registration is **admin-only**. There is no public registration endpoint. All users are created by administrators.
 
-**Admin/Teacher account creation:**
-- Only Super Admins and Administrators can create users with roles
-- `POST /users` endpoint for admin user creation
+**User creation:**
+- Only Super Admins and Administrators can create users with roles via `POST /api/v1/users`
+- Role defaults to `'student'` when no role is specified in the DTO
+- Created users are linked to their creator via `createdById` field
 - Created users are linked to their creator via `createdById` field
 - Teachers must be assigned to classes by administrators
 - Parents must be linked to students by administrators

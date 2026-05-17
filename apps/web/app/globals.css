@@ -32,15 +32,15 @@
   }
 
   .btn-primary {
-    @apply bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-all active:scale-95 shadow-sm;
+    @apply bg-[var(--brand-green)] hover:bg-green-800 text-white font-bold py-2 px-6 rounded-lg transition-all active:scale-95 shadow-sm;
   }
 
   .btn-secondary {
     @apply bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 px-6 rounded-lg transition-all active:scale-95 border border-slate-200;
   }
 
-  .btn-green {
-    @apply bg-[var(--brand-green)] hover:bg-green-800 text-white font-bold py-2 px-6 rounded-lg transition-all active:scale-95;
+  .btn-gold {
+    @apply bg-[var(--brand-gold)] hover:brightness-110 text-brand-green font-black py-2 px-6 rounded-lg transition-all active:scale-95 shadow-md;
   }
 
   .nav-tab {
@@ -53,5 +53,32 @@
   
   .glass-card {
      @apply bg-white/80 backdrop-blur-md border border-slate-200 shadow-xl;
+  }
+
+  .premium-card {
+    @apply bg-white border-2 border-slate-100 rounded-2xl shadow-[0_20px_50px_rgba(0,96,47,0.05)] transition-all duration-300;
+  }
+
+  .premium-card:hover {
+    @apply border-brand-green/10 shadow-[0_20px_60px_rgba(0,96,47,0.08)];
+  }
+
+  .institutional-input {
+    @apply w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-6 py-4 text-slate-800 font-bold focus:outline-none focus:ring-4 focus:ring-green-50 focus:border-brand-green/30 transition-all placeholder:text-slate-300;
+  }
+
+  .floating-label-group {
+    @apply relative transition-all duration-200;
+  }
+
+  .floating-label-group label {
+    @apply absolute left-6 top-4 text-[9px] font-black text-slate-400 uppercase tracking-widest pointer-events-none transition-all;
+  }
+
+  .floating-label-group input:focus + label,
+  .floating-label-group input:not(:placeholder-shown) + label,
+  .floating-label-group textarea:focus + label,
+  .floating-label-group textarea:not(:placeholder-shown) + label {
+    @apply -top-2 bg-white px-2 text-brand-green;
   }
 }

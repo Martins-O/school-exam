@@ -35,7 +35,7 @@ export default function DashboardPage() {
         setLoading(false);
         router.push('/login');
       });
-  }, []);
+  }, [router]);
 
   const handleLogout = () => {
     clearAuth();

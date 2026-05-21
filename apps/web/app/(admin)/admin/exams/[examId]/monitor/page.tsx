@@ -3,7 +3,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { io, Socket } from 'socket.io-client';
-import api from '@/lib/api';
 
 interface MonitoringEvent {
   id: string;

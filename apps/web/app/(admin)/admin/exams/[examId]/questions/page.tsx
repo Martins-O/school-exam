@@ -4,7 +4,6 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
-import Link from 'next/link';
 import AdminHeader from '@/components/admin/AdminHeader';
 import PortalModal from '@/components/admin/PortalModal';
 
@@ -609,7 +608,7 @@ export default function AdminQuestionsPage() {
       />
 
       <footer className="max-w-7xl mx-auto px-8 py-12 border-t border-slate-100 text-center">
-        <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.5em]">Institutional CBT Command & Control © 2024</p>
+        <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.5em]">Institutional CBT Command & Control © {new Date().getFullYear()}</p>
       </footer>
     </div>
   );

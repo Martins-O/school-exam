@@ -38,18 +38,7 @@ export default function AdminExamsPage() {
   const loadExams = async () => {
     try {
       const res = await api.get('/exams');
-      const examsData = res.data;
-      const withCounts = await Promise.all(
-        examsData.map(async (e: Exam) => {
-          try {
-            const qRes = await api.get(`/exams/${e.id}`);
-            return { ...e, questionCount: qRes.data.questionCount || 0 };
-          } catch {
-            return { ...e, questionCount: 0 };
-          }
-        })
-      );
-      setExams(withCounts);
+      setExams(res.data);
     } catch {
       router.push('/login');
     } finally {
@@ -258,7 +247,7 @@ export default function AdminExamsPage() {
       />
       
       <footer className="max-w-7xl mx-auto px-8 py-12 text-center">
-        <p className="text-[10px] font-black text-slate-200 uppercase tracking-[0.5em]">Institutional CBT Foundry Control © 2024</p>
+        <p className="text-[10px] font-black text-slate-200 uppercase tracking-[0.5em]">Institutional CBT Foundry Control © {new Date().getFullYear()}</p>
       </footer>
     </>
   );

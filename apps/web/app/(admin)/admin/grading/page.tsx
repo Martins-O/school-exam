@@ -1,10 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
-import Link from 'next/link';
 import AdminHeader from '@/components/admin/AdminHeader';
 import PortalModal from '@/components/admin/PortalModal';
 import PortalSpinner from '@/components/ui/PortalSpinner';
@@ -353,7 +352,7 @@ export default function GradingDashboardPage() {
       </main>
 
       <footer className="max-w-7xl mx-auto px-8 py-12 text-center border-t border-slate-100">
-        <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.5em]">Institutional Evaluation Registry © 2024</p>
+        <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.5em]">Institutional Evaluation Registry © {new Date().getFullYear()}</p>
       </footer>
     </div>
   );

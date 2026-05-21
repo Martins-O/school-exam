@@ -1,19 +1,19 @@
 import { Get, Controller } from '@nestjs/common';
-import { InjectConnection } from '@nestjs/typeorm';
-import { Connection } from 'typeorm';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
 
 @Controller('health')
 export class HealthController {
   constructor(
-    @InjectConnection()
-    private readonly connection: Connection,
+    @InjectDataSource()
+    private readonly dataSource: DataSource,
   ) {}
 
   @Get()
   async check() {
     let dbStatus = 'connected';
     try {
-      await this.connection.query('SELECT 1');
+      await this.dataSource.query('SELECT 1');
     } catch {
       dbStatus = 'disconnected';
     }

@@ -74,8 +74,19 @@ export default function AdminTimetablePage() {
   const [scheduleExamId, setScheduleExamId] = useState('');
   const [scheduleDate, setScheduleDate] = useState('');
   const [scheduleStartTime, setScheduleStartTime] = useState('');
-  const [scheduleEndTime, setScheduleEndTime] = useState('');
+  const [selectedExamDuration, setSelectedExamDuration] = useState(0);
   const [saving, setSaving] = useState(false);
+
+  const selectedExam = data?.availableExams?.find(e => e.id === scheduleExamId);
+  const calcEndTime = scheduleDate && scheduleStartTime && selectedExam
+    ? (() => {
+        const [h, m] = scheduleStartTime.split(':').map(Number);
+        const start = new Date(scheduleDate);
+        start.setHours(h, m, 0, 0);
+        const end = new Date(start.getTime() + selectedExam.durationMinutes * 60 * 1000);
+        return `${String(end.getHours()).padStart(2, '0')}:${String(end.getMinutes()).padStart(2, '0')}`;
+      })()
+    : null;
 
   const minDate = new Date().toISOString().split('T')[0];
   const isToday = scheduleDate === minDate;
@@ -114,23 +125,23 @@ export default function AdminTimetablePage() {
 
   const handleSchedule = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!scheduleExamId || !scheduleDate || !scheduleStartTime) return;
+    if (!scheduleExamId || !scheduleDate || !scheduleStartTime || !calcEndTime) return;
     setSaving(true);
     try {
       const startDateTime = `${scheduleDate}T${scheduleStartTime}`;
-      const endDateTime = scheduleEndTime ? `${scheduleDate}T${scheduleEndTime}` : null;
+      const endDateTime = `${scheduleDate}T${calcEndTime}`;
       await api.post('/timetable', {
         examId: scheduleExamId,
         classId: selectedClassId,
         startTime: new Date(startDateTime).toISOString(),
-        endTime: endDateTime ? new Date(endDateTime).toISOString() : null,
+        endTime: new Date(endDateTime).toISOString(),
       });
       toast.success('Exam scheduled for class');
       setShowScheduleForm(false);
       setScheduleExamId('');
       setScheduleDate('');
       setScheduleStartTime('');
-      setScheduleEndTime('');
+      setSelectedExamDuration(0);
       loadTimetable(selectedClassId);
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Failed to schedule');
@@ -194,7 +205,11 @@ export default function AdminTimetablePage() {
                 <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Exam</label>
                 <select
                   value={scheduleExamId}
-                  onChange={(e) => setScheduleExamId(e.target.value)}
+                  onChange={(e) => {
+                    setScheduleExamId(e.target.value);
+                    const exam = data?.availableExams?.find(x => x.id === e.target.value);
+                    setSelectedExamDuration(exam?.durationMinutes || 0);
+                  }}
                   className="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-green-100"
                   required
                 >
@@ -227,14 +242,10 @@ export default function AdminTimetablePage() {
                 />
               </div>
               <div>
-                <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">End Time (optional)</label>
-                <input
-                  type="time"
-                  value={scheduleEndTime}
-                  onChange={(e) => setScheduleEndTime(e.target.value)}
-                  min={minTime}
-                  className="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-green-100"
-                />
+                <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">End Time (auto-calculated)</label>
+                <div className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3.5 text-xs font-bold text-slate-500">
+                  {calcEndTime || '—'}
+                </div>
               </div>
               <button
                 type="submit"

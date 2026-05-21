@@ -163,6 +163,95 @@ export class ClassesService {
     await this.teacherClassRepo.save(teacherClass);
   }
 
+  async addStudents(classId: string, studentIds: string[]): Promise<{ enrolled: number; errors: { id: string; message: string }[] }> {
+    const classEntity = await this.findOne(classId);
+    const enrolled: string[] = [];
+    const errors: { id: string; message: string }[] = [];
+
+    for (const studentId of studentIds) {
+      try {
+        const student = await this.userRepo.findOne({ where: { id: studentId } });
+        if (!student) {
+          errors.push({ id: studentId, message: 'Student not found' });
+          continue;
+        }
+        if (student.role !== 'student') {
+          errors.push({ id: studentId, message: 'User is not a student' });
+          continue;
+        }
+
+        const existingEnrollment = await this.classStudentRepo.findOne({
+          where: { studentId, isActive: true },
+        });
+        if (existingEnrollment) {
+          if (existingEnrollment.classId === classId) {
+            errors.push({ id: studentId, message: 'Student is already actively enrolled in this class' });
+            continue;
+          }
+          existingEnrollment.isActive = false;
+          existingEnrollment.unenrolledAt = new Date();
+          await this.classStudentRepo.save(existingEnrollment);
+        }
+
+        const classStudent = this.classStudentRepo.create({
+          class: classEntity,
+          classId,
+          student,
+          studentId,
+          enrolledAt: new Date(),
+        });
+        await this.classStudentRepo.save(classStudent);
+        enrolled.push(studentId);
+      } catch (err: any) {
+        errors.push({ id: studentId, message: err.message || 'Enrollment failed' });
+      }
+    }
+
+    return { enrolled: enrolled.length, errors };
+  }
+
+  async assignTeachers(classId: string, teacherIds: string[]): Promise<{ assigned: number; errors: { id: string; message: string }[] }> {
+    const classEntity = await this.findOne(classId);
+    const assigned: string[] = [];
+    const errors: { id: string; message: string }[] = [];
+
+    for (const teacherId of teacherIds) {
+      try {
+        const teacher = await this.userRepo.findOne({ where: { id: teacherId } });
+        if (!teacher) {
+          errors.push({ id: teacherId, message: 'Teacher not found' });
+          continue;
+        }
+        if (!['teacher', 'super_admin', 'administrator'].includes(teacher.role)) {
+          errors.push({ id: teacherId, message: 'User is not a teacher or admin' });
+          continue;
+        }
+
+        const existing = await this.teacherClassRepo.findOne({
+          where: { classId, teacherId },
+        });
+        if (existing) {
+          errors.push({ id: teacherId, message: 'Teacher already assigned to this class' });
+          continue;
+        }
+
+        const teacherClass = this.teacherClassRepo.create({
+          class: classEntity,
+          classId,
+          teacher,
+          teacherId,
+          assignedAt: new Date(),
+        });
+        await this.teacherClassRepo.save(teacherClass);
+        assigned.push(teacherId);
+      } catch (err: any) {
+        errors.push({ id: teacherId, message: err.message || 'Assignment failed' });
+      }
+    }
+
+    return { assigned: assigned.length, errors };
+  }
+
   async removeTeacher(classId: string, teacherId: string): Promise<void> {
     const teacherClass = await this.teacherClassRepo.findOne({
       where: { classId, teacherId },

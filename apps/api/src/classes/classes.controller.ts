@@ -5,7 +5,9 @@ import { Roles } from '../auth/roles.decorator';
 import { ClassesService } from './classes.service';
 import { CreateClassDto } from './dto/create-class.dto';
 import { AddStudentDto } from './dto/add-student.dto';
+import { AddStudentsDto } from './dto/add-students.dto';
 import { AssignTeacherDto } from './dto/assign-teacher.dto';
+import { AssignTeachersDto } from './dto/assign-teachers.dto';
 
 @Controller('classes')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -39,6 +41,16 @@ export class ClassesController {
     return { message: 'Student added to class successfully' };
   }
 
+  @Post(':id/students/bulk')
+  async addStudents(@Param('id') id: string, @Body() dto: AddStudentsDto) {
+    const result = await this.classesService.addStudents(id, dto.studentIds);
+    return {
+      message: `${result.enrolled} student(s) enrolled successfully`,
+      enrolled: result.enrolled,
+      errors: result.errors,
+    };
+  }
+
   @Delete(':id/students/:studentId')
   async removeStudent(@Param('id') id: string, @Param('studentId') studentId: string) {
     await this.classesService.removeStudent(id, studentId);
@@ -54,6 +66,16 @@ export class ClassesController {
   async assignTeacher(@Param('id') id: string, @Body() dto: AssignTeacherDto) {
     await this.classesService.assignTeacher(id, dto.teacherId);
     return { message: 'Teacher assigned to class successfully' };
+  }
+
+  @Post(':id/teachers/bulk')
+  async assignTeachers(@Param('id') id: string, @Body() dto: AssignTeachersDto) {
+    const result = await this.classesService.assignTeachers(id, dto.teacherIds);
+    return {
+      message: `${result.assigned} advisor(s) assigned successfully`,
+      assigned: result.assigned,
+      errors: result.errors,
+    };
   }
 
   @Delete(':id/teachers/:teacherId')

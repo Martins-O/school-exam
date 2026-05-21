@@ -93,10 +93,13 @@ export default function AdminClassesPage() {
   const handleEnroll = async () => {
     if (!selectedClass || selectedStudents.length === 0) return;
     try {
-      for (const id of selectedStudents) {
-        await api.post(`/classes/${selectedClass.id}/students`, { studentId: id });
+      const res = await api.post(`/classes/${selectedClass.id}/students/bulk`, { studentIds: selectedStudents });
+      const msg = res.data.message || 'Student(s) enrolled successfully';
+      if (res.data.errors?.length > 0) {
+        toast(`${msg}. ${res.data.errors.length} error(s) occurred.`, { icon: '⚠️' });
+      } else {
+        toast.success(msg);
       }
-      toast.success('Student(s) enrolled successfully');
       setShowEnroll(false);
       setSelectedStudents([]);
       refreshData();
@@ -130,10 +133,13 @@ export default function AdminClassesPage() {
   const handleAssignTeacher = async () => {
     if (!selectedClass || selectedTeachers.length === 0) return;
     try {
-      for (const id of selectedTeachers) {
-        await api.post(`/classes/${selectedClass.id}/teachers`, { teacherId: id });
+      const res = await api.post(`/classes/${selectedClass.id}/teachers/bulk`, { teacherIds: selectedTeachers });
+      const msg = res.data.message || 'Advisor(s) assigned';
+      if (res.data.errors?.length > 0) {
+        toast(`${msg}. ${res.data.errors.length} error(s) occurred.`, { icon: '⚠️' });
+      } else {
+        toast.success(msg);
       }
-      toast.success('Advisor(s) assigned');
       setShowAssignTeacher(false);
       setSelectedTeachers([]);
       refreshData();

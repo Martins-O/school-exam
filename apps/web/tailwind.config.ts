@@ -11,8 +11,11 @@ const config: Config = {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
-        'brand-green': '#00602F',
-        'brand-gold': '#FFD700',
+        'brand-green': '#0F5132',
+        'brand-green-dark': '#0A3622',
+        'brand-green-light': '#198754',
+        'brand-gold': '#C5A059',
+        'brand-gold-light': '#E6C15C',
       },
       animation: {
         'marquee': 'marquee 30s linear infinite',

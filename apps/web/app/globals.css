@@ -3,82 +3,139 @@
 @tailwind utilities;
 
 :root {
-  --brand-green: #00602F;
-  --brand-gold: #FFD700;
-  --brand-blue: #4D90FE;
-  --brand-red: #D32F2F;
-  --background: #FFFFFF;
-  --foreground: #1a1a1a;
+  --brand-green-dark: #0A3622;
+  --brand-green: #0F5132;
+  --brand-green-light: #198754;
+  --brand-gold: #C5A059;
+  --brand-gold-light: #E6C15C;
+  --brand-gold-glow: rgba(197, 160, 89, 0.15);
+  --slate-gold: #F4EFE6;
+  --background: #FDFDFD;
+  --foreground: #0F172A;
+  --card-shadow: 0 10px 30px -10px rgba(15, 81, 50, 0.08);
+  --card-hover-shadow: 0 20px 40px -15px rgba(15, 81, 50, 0.15);
 }
 
 @layer base {
   body {
-    @apply bg-slate-50 text-slate-900;
+    @apply bg-slate-50/50 text-slate-900 antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
+    background-image: 
+      radial-gradient(rgba(15, 81, 50, 0.03) 1.5px, transparent 1.5px),
+      radial-gradient(rgba(197, 160, 89, 0.02) 1.5px, transparent 1.5px);
+    background-size: 32px 32px;
+    background-position: 0 0, 16px 16px;
+  }
+
+  /* Custom Premium Scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: rgba(15, 81, 50, 0.02);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(197, 160, 89, 0.3);
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--brand-gold);
   }
 }
 
 @layer components {
+  /* Premium Glass Cards */
   .portal-card {
-    @apply bg-white border border-slate-200 shadow-sm rounded-xl overflow-hidden transition-all duration-200;
+    @apply bg-white/90 backdrop-blur-md border border-slate-200/80 rounded-2xl p-8 transition-all duration-300 shadow-[var(--card-shadow)] relative overflow-hidden;
+  }
+
+  .portal-card::before {
+    content: '';
+    @apply absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-brand-green to-brand-gold opacity-0 transition-opacity duration-300;
   }
 
   .portal-card:hover {
-    @apply shadow-md border-brand-green/20;
+    @apply -translate-y-1 shadow-[var(--card-hover-shadow)] border-brand-green/20;
   }
 
-  .cbt-header {
-    @apply bg-[var(--brand-green)] text-white shadow-lg;
+  .portal-card:hover::before {
+    @apply opacity-100;
   }
 
-  .btn-primary {
-    @apply bg-[var(--brand-green)] hover:bg-green-800 text-white font-bold py-2 px-6 rounded-lg transition-all active:scale-95 shadow-sm;
-  }
-
-  .btn-secondary {
-    @apply bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 px-6 rounded-lg transition-all active:scale-95 border border-slate-200;
-  }
-
-  .btn-gold {
-    @apply bg-[var(--brand-gold)] hover:brightness-110 text-brand-green font-black py-2 px-6 rounded-lg transition-all active:scale-95 shadow-md;
-  }
-
-  .nav-tab {
-    @apply px-6 py-3 font-bold text-sm tracking-tight border-b-4 border-transparent transition-all;
-  }
-
-  .nav-tab.active {
-    @apply border-brand-gold text-brand-gold bg-black/10;
-  }
-  
-  .glass-card {
-     @apply bg-white/80 backdrop-blur-md border border-slate-200 shadow-xl;
-  }
-
+  /* Standard Institutional Premium Card */
   .premium-card {
-    @apply bg-white border-2 border-slate-100 rounded-2xl shadow-[0_20px_50px_rgba(0,96,47,0.05)] transition-all duration-300;
+    @apply bg-white border-2 border-slate-100 rounded-2xl shadow-[var(--card-shadow)] transition-all duration-300 relative overflow-hidden;
   }
 
   .premium-card:hover {
-    @apply border-brand-green/10 shadow-[0_20px_60px_rgba(0,96,47,0.08)];
+    @apply border-brand-green/20 -translate-y-1 shadow-[var(--card-hover-shadow)];
   }
 
+  /* Rich Glass Card with subtle golden tint */
+  .glass-card {
+    @apply bg-white/70 backdrop-blur-xl border border-white/60 shadow-xl rounded-2xl relative;
+    background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(244, 239, 230, 0.4));
+  }
+
+  /* Header System */
+  .cbt-header {
+    @apply bg-[var(--brand-green-dark)] text-white shadow-2xl relative border-b border-brand-gold/20 overflow-hidden;
+  }
+
+  .cbt-header::after {
+    content: '';
+    @apply absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-brand-gold to-transparent opacity-60;
+  }
+
+  /* Beautiful Premium Buttons */
+  .btn-primary {
+    @apply relative overflow-hidden bg-gradient-to-r from-brand-green to-emerald-800 text-white font-black py-3.5 px-8 rounded-xl transition-all duration-300 active:scale-95 shadow-lg shadow-green-950/20 uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 hover:brightness-110 hover:-translate-y-0.5;
+  }
+
+  .btn-secondary {
+    @apply bg-white hover:bg-slate-50 text-slate-700 font-black py-3.5 px-8 rounded-xl transition-all duration-300 active:scale-95 border-2 border-slate-200 uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 hover:-translate-y-0.5;
+  }
+
+  .btn-gold {
+    @apply relative overflow-hidden bg-gradient-to-r from-brand-gold via-brand-gold-light to-brand-gold text-brand-green-dark font-black py-3.5 px-8 rounded-xl transition-all duration-300 active:scale-95 shadow-lg shadow-amber-900/10 uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 hover:brightness-110 hover:-translate-y-0.5;
+  }
+
+  /* Navigation tab system */
+  .nav-tab {
+    @apply px-8 py-4 font-black text-[10px] uppercase tracking-[0.2em] border-b-4 border-transparent transition-all duration-200 text-slate-400 hover:text-white/80;
+  }
+
+  .nav-tab.active {
+    @apply border-brand-gold text-brand-gold bg-black/20;
+  }
+
+  /* Highly Polished Floating Inputs */
   .institutional-input {
-    @apply w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-6 py-4 text-slate-800 font-bold focus:outline-none focus:ring-4 focus:ring-green-50 focus:border-brand-green/30 transition-all placeholder:text-slate-300;
+    @apply w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-6 py-4 text-slate-800 font-bold focus:outline-none focus:ring-4 focus:ring-green-50/50 focus:border-brand-green/30 transition-all placeholder:text-slate-300;
   }
 
   .floating-label-group {
-    @apply relative transition-all duration-200;
+    @apply relative transition-all duration-300;
   }
 
   .floating-label-group label {
-    @apply absolute left-6 top-4 text-[9px] font-black text-slate-400 uppercase tracking-widest pointer-events-none transition-all;
+    @apply absolute left-6 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400 uppercase tracking-widest pointer-events-none transition-all duration-300;
   }
 
   .floating-label-group input:focus + label,
   .floating-label-group input:not(:placeholder-shown) + label,
   .floating-label-group textarea:focus + label,
   .floating-label-group textarea:not(:placeholder-shown) + label {
-    @apply -top-2 bg-white px-2 text-brand-green;
+    @apply -top-2 translate-y-0 bg-white px-2.5 text-brand-green text-[9px] font-black;
+  }
+
+  /* Glowing effects */
+  .glow-gold {
+    box-shadow: 0 0 15px var(--brand-gold-glow);
+  }
+
+  .glow-green {
+    box-shadow: 0 0 15px rgba(15, 81, 50, 0.1);
   }
 }

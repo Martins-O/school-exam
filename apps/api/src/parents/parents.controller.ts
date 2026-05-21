@@ -1,11 +1,24 @@
 import { Controller, Post, Get, Delete, Body, Param, UseGuards, Req } from '@nestjs/common';
+import { IsString } from 'class-validator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { ParentsService } from './parents.service';
 import { ResultsService } from '../results/results.service';
 import { TranscriptsService } from '../transcripts/transcripts.service';
-import { LinkStudentDto } from './dto/link-student.dto';
+
+class LinkStudentDto {
+  @IsString()
+  parentId: string;
+
+  @IsString()
+  studentId: string;
+}
+
+class UnlinkDto {
+  @IsString()
+  parentId: string;
+}
 
 @Controller('parent')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -43,8 +56,8 @@ export class ParentsController {
 
   @Delete('unlink/:studentId')
   @Roles('super_admin', 'administrator')
-  async unlinkStudent(@Param('studentId') studentId: string, @Req() req) {
-    await this.parentsService.unlinkStudent(req.user.id, studentId);
+  async unlinkStudent(@Param('studentId') studentId: string, @Body() dto: UnlinkDto) {
+    await this.parentsService.unlinkStudent(dto.parentId, studentId);
     return { message: 'Parent unlinked from student successfully' };
   }
 }

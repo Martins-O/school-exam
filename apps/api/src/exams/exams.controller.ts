@@ -31,7 +31,7 @@ export class ExamsController {
 
   @Get()
   async findAll(@Req() req) {
-    return this.examsService.findAll(req.user);
+    return this.examsService.findAllWithQuestionCount(req.user);
   }
 
   @Get(':id')

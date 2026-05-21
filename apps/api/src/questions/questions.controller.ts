@@ -73,7 +73,7 @@ export class QuestionsController {
     @Body() dto: UpdateQuestionDto,
     @Req() req,
   ) {
-    return this.questionsService.update(examId, id, dto, req.user);
+    return this.questionsService.update(id, dto, req.user);
   }
 
   @Delete(':id')

@@ -22,6 +22,7 @@ interface ClassItem {
 }
 
 interface QuestionForm {
+  _tempId: string;
   questionText: string;
   optionA: string;
   optionB: string;
@@ -32,6 +33,7 @@ interface QuestionForm {
 }
 
 const emptyQuestion = (): QuestionForm => ({
+  _tempId: crypto.randomUUID?.() || Math.random().toString(36).substring(2, 11),
   questionText: '',
   optionA: '',
   optionB: '',
@@ -161,6 +163,7 @@ export default function TeacherExamsPage() {
       }
 
       parsed.push({
+        _tempId: crypto.randomUUID?.() || Math.random().toString(36).substring(2, 11),
         questionText,
         optionA: options['A'] || '',
         optionB: options['B'] || '',
@@ -533,7 +536,7 @@ Marks: 2`}</pre>
                     </div>
 
                     {questions.map((q, i) => (
-                      <div key={i} className="border-2 border-slate-100 rounded-2xl p-6 mb-6 bg-slate-50/50">
+                      <div key={q._tempId} className="border-2 border-slate-100 rounded-2xl p-6 mb-6 bg-slate-50/50">
                         <div className="flex items-center justify-between mb-4">
                           <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Question {i + 1}</span>
                           <button

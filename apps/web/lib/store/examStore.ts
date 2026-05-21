@@ -42,6 +42,8 @@ interface ExamState {
     startedAt: string;
     durationMinutes: number;
     maxViolations?: number;
+    answers?: Record<string, string>;
+    flaggedQuestions?: string[];
   }) => void;
   resetExam: () => void;
   setCurrentIndex: (index: number) => void;
@@ -99,8 +101,8 @@ export const useExamStore = create<ExamState>()((set) => ({
       durationMinutes: data.durationMinutes,
       maxViolations: data.maxViolations ?? 3,
       status: 'active',
-      answers: {},
-      flaggedQuestions: [],
+      answers: data.answers ?? {},
+      flaggedQuestions: data.flaggedQuestions ?? [],
       violations: 0,
       currentIndex: 0,
     }),

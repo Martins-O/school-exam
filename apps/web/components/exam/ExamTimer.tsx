@@ -1,9 +1,8 @@
 interface ExamTimerProps {
   remainingSeconds: number;
-  isCritical?: boolean;
 }
 
-export default function ExamTimer({ remainingSeconds, isCritical }: ExamTimerProps) {
+export default function ExamTimer({ remainingSeconds }: ExamTimerProps) {
   const h = Math.floor(remainingSeconds / 3600);
   const m = Math.floor((remainingSeconds % 3600) / 60);
   const s = remainingSeconds % 60;

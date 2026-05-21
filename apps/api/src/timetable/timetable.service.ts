@@ -1,9 +1,11 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Exam } from '../exams/entities/exam.entity';
 import { Submission } from '../submissions/entities/submission.entity';
 import { Question } from '../questions/entities/question.entity';
+import { Class } from '../classes/entities/class.entity';
+import { TeacherClass } from '../classes/entities/teacher-class.entity';
 import { ClassesService } from '../classes/classes.service';
 
 @Injectable()
@@ -15,29 +17,82 @@ export class TimetableService {
     private readonly submissionRepository: Repository<Submission>,
     @InjectRepository(Question)
     private readonly questionRepository: Repository<Question>,
+    @InjectRepository(Class)
+    private readonly classRepository: Repository<Class>,
+    @InjectRepository(TeacherClass)
+    private readonly teacherClassRepository: Repository<TeacherClass>,
     private readonly classesService: ClassesService,
   ) {}
 
-  async getTimetable(user?: any): Promise<{ scheduled: any[]; unscheduled: any[] }> {
-    const query = this.examRepository
+  async getTimetable(user?: any, classId?: string): Promise<{
+    classes: any[];
+    selectedClass: any | null;
+    exams: any[];
+    availableExams: any[];
+  }> {
+    let allClasses: Class[];
+    if (user && user.role === 'teacher') {
+      const teacherClasses = await this.teacherClassRepository.find({
+        where: { teacherId: user.id },
+        relations: ['class'],
+      });
+      allClasses = teacherClasses.map(tc => tc.class);
+      if (classId && !allClasses.some(c => c.id === classId)) {
+        throw new ForbiddenException('You are not assigned to this class');
+      }
+    } else {
+      allClasses = await this.classRepository.find();
+    }
+
+    let selectedClass: Class | null = null;
+    if (classId) {
+      selectedClass = allClasses.find(c => c.id === classId) || null;
+      if (!selectedClass && user?.role !== 'teacher') {
+        selectedClass = await this.classRepository.findOne({ where: { id: classId } });
+      }
+    }
+
+    const examQuery = this.examRepository
       .createQueryBuilder('exam')
       .leftJoinAndSelect('exam.targetClasses', 'targetClasses')
       .leftJoinAndSelect('exam.createdBy', 'createdBy')
       .loadRelationCountAndMap('exam.questionCount', 'exam.questions');
 
     if (user && user.role === 'teacher') {
-      query.where('exam.createdById = :teacherId', { teacherId: user.id });
+      examQuery.where('exam.createdById = :teacherId', { teacherId: user.id });
     }
 
-    const allExams = await query.getMany();
+    const allExams = await examQuery.getMany();
 
-    const scheduled = allExams
+    let classExams = allExams;
+    if (selectedClass) {
+      classExams = allExams.filter(exam =>
+        exam.targetClasses?.some(c => c.id === selectedClass.id)
+      );
+    }
+
+    const scheduled = classExams
       .filter(e => e.startTime)
       .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
 
-    const unscheduled = allExams.filter(e => !e.startTime);
+    const unscheduled = classExams.filter(e => !e.startTime);
 
-    return { scheduled, unscheduled };
+    const allScheduledIds = new Set(classExams.filter(e => e.startTime).map(e => e.id));
+    const availableExams = allExams
+      .filter(e => !allScheduledIds.has(e.id))
+      .filter(e => !selectedClass || (classId && !e.targetClasses?.some(c => c.id === classId)) || !classId)
+      .filter(e => user?.role !== 'teacher' || e.createdBy?.id === user?.id);
+
+    return {
+      classes: allClasses.map(c => ({ id: c.id, name: c.name })),
+      selectedClass: selectedClass ? { id: selectedClass.id, name: selectedClass.name } : null,
+      exams: [...scheduled, ...unscheduled],
+      availableExams: availableExams.map(e => ({
+        id: e.id,
+        title: e.title,
+        durationMinutes: e.durationMinutes,
+      })),
+    };
   }
 
   async getStudentTimetable(studentId: string): Promise<{
@@ -125,9 +180,6 @@ export class TimetableService {
       status: s.status,
     }));
 
-    const todayExamIds = new Set(today.map(e => e.id));
-    const upcomingExamIds = new Set(upcoming.map(e => e.id));
-
     const completedExamIds = new Set(completed.map(c => c.examId));
     const filteredToday = today.filter(e => !completedExamIds.has(e.id));
     const filteredUpcoming = upcoming.filter(e => !completedExamIds.has(e.id));
@@ -137,6 +189,50 @@ export class TimetableService {
       today: filteredToday,
       completed,
     };
+  }
+
+  async scheduleExam(
+    examId: string,
+    classId: string,
+    startTime: Date,
+    endTime: Date | null,
+    user: any,
+  ): Promise<Exam> {
+    const exam = await this.examRepository.findOne({
+      where: { id: examId },
+      relations: ['createdBy', 'targetClasses'],
+    });
+
+    if (!exam) {
+      throw new NotFoundException('Exam not found');
+    }
+
+    if (user.role === 'teacher' && exam.createdBy.id !== user.id) {
+      throw new ForbiddenException('You can only schedule your own exams');
+    }
+
+    const classEntity = await this.classRepository.findOne({ where: { id: classId } });
+    if (!classEntity) {
+      throw new NotFoundException('Class not found');
+    }
+
+    if (user.role === 'teacher') {
+      const teacherClass = await this.teacherClassRepository.findOne({
+        where: { teacherId: user.id, classId },
+      });
+      if (!teacherClass) {
+        throw new ForbiddenException('You are not assigned to this class');
+      }
+    }
+
+    const alreadyTargets = exam.targetClasses?.some(c => c.id === classId);
+    if (!alreadyTargets) {
+      exam.targetClasses = [...(exam.targetClasses || []), classEntity];
+    }
+
+    exam.startTime = startTime;
+    exam.endTime = endTime;
+    return this.examRepository.save(exam);
   }
 
   async updateSchedule(

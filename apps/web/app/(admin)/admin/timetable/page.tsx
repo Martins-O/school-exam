@@ -22,12 +22,19 @@ interface Exam {
   endTime: string | null;
   questionCount?: number;
   targetClasses: ClassItem[];
-  createdBy?: { id: string; name: string };
 }
 
-interface ScheduleData {
-  scheduled: Exam[];
-  unscheduled: Exam[];
+interface AvailableExam {
+  id: string;
+  title: string;
+  durationMinutes: number;
+}
+
+interface TimetableData {
+  classes: ClassItem[];
+  selectedClass: ClassItem | null;
+  exams: Exam[];
+  availableExams: AvailableExam[];
 }
 
 function formatDate(iso: string) {
@@ -58,211 +65,273 @@ function groupByDate(exams: Exam[]): Record<string, Exam[]> {
 }
 
 export default function AdminTimetablePage() {
-  const [data, setData] = useState<ScheduleData | null>(null);
+  const [data, setData] = useState<TimetableData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editStart, setEditStart] = useState('');
-  const [editEnd, setEditEnd] = useState('');
+  const [selectedClassId, setSelectedClassId] = useState<string>('');
+  const [showScheduleForm, setShowScheduleForm] = useState(false);
+
+  // Schedule form
+  const [scheduleExamId, setScheduleExamId] = useState('');
+  const [scheduleDate, setScheduleDate] = useState('');
+  const [scheduleStartTime, setScheduleStartTime] = useState('');
+  const [scheduleEndTime, setScheduleEndTime] = useState('');
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => { loadTimetable(); }, []);
+  useEffect(() => {
+    if (selectedClassId) {
+      loadTimetable(selectedClassId);
+    } else {
+      loadClasses();
+    }
+  }, [selectedClassId]);
 
-  const loadTimetable = async () => {
+  const loadClasses = async () => {
     try {
       const res = await api.get('/timetable');
+      setData(res.data);
+      if (res.data.classes?.length > 0) {
+        setSelectedClassId(res.data.classes[0].id);
+      }
+      setLoading(false);
+    } catch { setLoading(false); toast.error('Failed to load'); }
+  };
+
+  const loadTimetable = async (classId: string) => {
+    setLoading(true);
+    try {
+      const res = await api.get(`/timetable?classId=${classId}`);
       setData(res.data);
     } catch { toast.error('Failed to load timetable'); }
     finally { setLoading(false); }
   };
 
-  const startEdit = (exam: Exam) => {
-    setEditingId(exam.id);
-    setEditStart(exam.startTime ? new Date(exam.startTime).toISOString().slice(0, 16) : '');
-    setEditEnd(exam.endTime ? new Date(exam.endTime).toISOString().slice(0, 16) : '');
-  };
-
-  const saveSchedule = async (examId: string) => {
+  const handleSchedule = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!scheduleExamId || !scheduleDate || !scheduleStartTime) return;
     setSaving(true);
     try {
-      await api.patch(`/timetable/${examId}`, {
-        startTime: editStart ? new Date(editStart).toISOString() : null,
-        endTime: editEnd ? new Date(editEnd).toISOString() : null,
+      const startDateTime = `${scheduleDate}T${scheduleStartTime}`;
+      const endDateTime = scheduleEndTime ? `${scheduleDate}T${scheduleEndTime}` : null;
+      await api.post('/timetable', {
+        examId: scheduleExamId,
+        classId: selectedClassId,
+        startTime: new Date(startDateTime).toISOString(),
+        endTime: endDateTime ? new Date(endDateTime).toISOString() : null,
       });
-      toast.success('Schedule updated');
-      setEditingId(null);
-      loadTimetable();
+      toast.success('Exam scheduled for class');
+      setShowScheduleForm(false);
+      setScheduleExamId('');
+      setScheduleDate('');
+      setScheduleStartTime('');
+      setScheduleEndTime('');
+      loadTimetable(selectedClassId);
     } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to update schedule');
+      toast.error(err.response?.data?.message || 'Failed to schedule');
     } finally { setSaving(false); }
   };
 
-  if (loading) return (
+  if (loading && !data) return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center">
       <PortalSpinner size="lg" color="green" />
     </div>
   );
 
-  const scheduled = data?.scheduled || [];
-  const unscheduled = data?.unscheduled || [];
+  const scheduled = data?.exams?.filter(e => e.startTime) || [];
+  const unscheduled = data?.exams?.filter(e => !e.startTime) || [];
   const grouped = groupByDate(scheduled);
 
   return (
     <>
       <AdminHeader
-        subtitle="Schedule Matrix"
+        subtitle="Exam Timetable"
         actions={
-          <Link
-            href="/admin/exams"
-            className="px-6 py-2.5 bg-brand-gold text-brand-green rounded-xl font-black text-[10px] uppercase tracking-widest transition-all hover:brightness-110 shadow-xl"
-          >
-            Manage Exams
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link
+              href="/admin/exams"
+              className="px-5 py-2.5 bg-brand-gold text-brand-green rounded-xl font-black text-[10px] uppercase tracking-widest transition-all hover:brightness-110 shadow-xl"
+            >
+              Manage Exams
+            </Link>
+          </div>
         }
       />
       <main className="max-w-7xl mx-auto px-8 py-16">
-        {/* Unscheduled Section */}
-        {unscheduled.length > 0 && (
-          <div className="mb-20">
-            <div className="flex items-center gap-4 mb-8">
-              <span className="w-2 h-8 bg-amber-400 rounded-full"></span>
-              <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Unscheduled Exams</h2>
-              <span className="px-3 py-1 bg-amber-50 text-amber-600 rounded-full text-[9px] font-black uppercase tracking-widest border border-amber-100">
-                {unscheduled.length} pending
-              </span>
+        {/* Class Selector */}
+        <div className="premium-card p-8 mb-12">
+          <div className="flex flex-col md:flex-row md:items-center gap-6">
+            <div className="flex-1">
+              <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Select Class</label>
+              <select
+                value={selectedClassId}
+                onChange={(e) => setSelectedClassId(e.target.value)}
+                className="w-full md:w-96 bg-white border-2 border-slate-200 rounded-xl px-5 py-4 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-green-100 focus:border-brand-green/40 transition-all"
+              >
+                <option value="">-- Select a class --</option>
+                {data?.classes?.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {unscheduled.map(exam => (
-                <div key={exam.id} className="premium-card p-8 border-l-4 border-l-amber-400">
-                  <div className="flex items-start justify-between mb-6">
-                    <h3 className="text-lg font-black text-slate-800 uppercase tracking-tight">{exam.title}</h3>
-                    <span className={`px-2 py-1 rounded text-[8px] font-black uppercase tracking-widest ${
-                      exam.isPublished ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'
-                    }`}>
-                      {exam.isPublished ? 'LIVE' : 'DRAFT'}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-4 text-[10px] font-bold text-slate-400 mb-6">
-                    <span>{exam.durationMinutes} min</span>
-                    {exam.questionCount !== undefined && <span>{exam.questionCount} Q</span>}
-                  </div>
-                  {exam.targetClasses?.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mb-6">
-                      {exam.targetClasses.map(c => (
-                        <span key={c.id} className="px-2 py-0.5 bg-slate-100 rounded text-[8px] font-black uppercase tracking-widest text-slate-500">{c.name}</span>
-                      ))}
-                    </div>
-                  )}
-                  {editingId === exam.id ? (
-                    <div className="space-y-3">
-                      <div>
-                        <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Start</label>
-                        <input type="datetime-local" value={editStart} onChange={e => setEditStart(e.target.value)} className="w-full bg-white border-2 border-slate-200 rounded-lg px-3 py-2 text-xs font-bold" />
-                      </div>
-                      <div>
-                        <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">End</label>
-                        <input type="datetime-local" value={editEnd} onChange={e => setEditEnd(e.target.value)} className="w-full bg-white border-2 border-slate-200 rounded-lg px-3 py-2 text-xs font-bold" />
-                      </div>
-                      <div className="flex gap-2">
-                        <button onClick={() => saveSchedule(exam.id)} disabled={saving} className="flex-1 px-4 py-2 bg-brand-green text-white rounded-lg font-black text-[9px] uppercase tracking-widest disabled:opacity-50">
-                          {saving ? 'Saving...' : 'Save'}
-                        </button>
-                        <button onClick={() => setEditingId(null)} className="px-4 py-2 bg-slate-100 text-slate-500 rounded-lg font-black text-[9px] uppercase tracking-widest">Cancel</button>
-                      </div>
-                    </div>
-                  ) : (
-                    <button onClick={() => startEdit(exam)} className="w-full py-3 bg-amber-50 text-amber-600 rounded-xl font-black text-[9px] uppercase tracking-widest hover:bg-amber-100 transition-all">
-                      Set Date & Time
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
+            <button
+              onClick={() => setShowScheduleForm(!showScheduleForm)}
+              className="px-8 py-4 bg-brand-green text-white font-black rounded-xl hover:bg-green-800 transition-all shadow-xl active:scale-95 uppercase text-[10px] tracking-widest shrink-0"
+            >
+              {showScheduleForm ? 'Discard' : '+ Schedule Exam'}
+            </button>
+          </div>
+
+          {/* Schedule Form */}
+          {showScheduleForm && selectedClassId && (
+            <form onSubmit={handleSchedule} className="mt-8 pt-8 border-t border-slate-100 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 items-end">
+              <div>
+                <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Exam</label>
+                <select
+                  value={scheduleExamId}
+                  onChange={(e) => setScheduleExamId(e.target.value)}
+                  className="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-green-100"
+                  required
+                >
+                  <option value="">-- Select --</option>
+                  {data?.availableExams?.map(e => (
+                    <option key={e.id} value={e.id}>{e.title} ({e.durationMinutes}min)</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Date</label>
+                <input
+                  type="date"
+                  value={scheduleDate}
+                  onChange={(e) => setScheduleDate(e.target.value)}
+                  className="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-green-100"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Start Time</label>
+                <input
+                  type="time"
+                  value={scheduleStartTime}
+                  onChange={(e) => setScheduleStartTime(e.target.value)}
+                  className="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-green-100"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">End Time (optional)</label>
+                <input
+                  type="time"
+                  value={scheduleEndTime}
+                  onChange={(e) => setScheduleEndTime(e.target.value)}
+                  className="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-green-100"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={saving}
+                className="px-6 py-4 bg-blue-600 text-white font-black rounded-xl hover:bg-blue-700 transition-all shadow-lg active:scale-95 uppercase text-[10px] tracking-widest disabled:opacity-50"
+              >
+                {saving ? 'Saving...' : 'Schedule'}
+              </button>
+            </form>
+          )}
+        </div>
+
+        {!selectedClassId && (
+          <div className="premium-card p-20 text-center">
+            <p className="text-lg font-black text-slate-300 uppercase tracking-widest">Select a class to manage its timetable</p>
           </div>
         )}
 
-        {/* Scheduled Section */}
-        <div className="flex items-center gap-4 mb-8">
-          <span className="w-2 h-8 bg-brand-green rounded-full"></span>
-          <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Scheduled Exams</h2>
-          <span className="px-3 py-1 bg-green-50 text-brand-green rounded-full text-[9px] font-black uppercase tracking-widest border border-green-100">
-            {scheduled.length} scheduled
-          </span>
-        </div>
-
-        {scheduled.length === 0 ? (
-          <div className="premium-card p-20 text-center">
-            <p className="text-sm font-black text-slate-300 uppercase tracking-widest mb-2">No exams scheduled</p>
-            <p className="text-[10px] font-bold text-slate-400">Set dates for unscheduled exams above, or create new exams</p>
-          </div>
-        ) : (
-          Object.entries(grouped).map(([dateKey, exams]) => (
-            <div key={dateKey} className="mb-12">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-12 h-12 bg-brand-green/10 rounded-2xl flex items-center justify-center text-lg">
-                  📅
+        {selectedClassId && (
+          <>
+            {/* Unscheduled */}
+            {unscheduled.length > 0 && (
+              <div className="mb-16">
+                <div className="flex items-center gap-4 mb-6">
+                  <span className="w-2 h-8 bg-amber-400 rounded-full"></span>
+                  <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight">Unscheduled</h2>
+                  <span className="px-3 py-1 bg-amber-50 text-amber-600 rounded-full text-[9px] font-black uppercase tracking-widest border border-amber-100">
+                    {unscheduled.length}
+                  </span>
                 </div>
-                <div>
-                  <h3 className="text-lg font-black text-slate-800 uppercase tracking-tight">{formatDate(dateKey)}</h3>
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{exams.length} exam(s)</p>
-                </div>
-              </div>
-              <div className="space-y-4">
-                {exams.map(exam => (
-                  <div key={exam.id} className="premium-card p-6 flex flex-col md:flex-row md:items-center gap-6">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h4 className="font-black text-slate-800 uppercase tracking-tight">{exam.title}</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {unscheduled.map(exam => (
+                    <div key={exam.id} className="premium-card p-6 border-l-4 border-l-amber-400 flex flex-col">
+                      <h3 className="font-black text-slate-800 uppercase tracking-tight mb-2">{exam.title}</h3>
+                      <div className="text-[10px] font-bold text-slate-400 mb-3">{exam.durationMinutes} min</div>
+                      <div className="mt-auto">
                         <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest ${
-                          exam.isPublished ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-amber-50 text-amber-600 border border-amber-200'
-                        }`}>{exam.isPublished ? 'LIVE' : 'DRAFT'}</span>
-                      </div>
-                      {exam.targetClasses?.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mb-2">
-                          {exam.targetClasses.map(c => (
-                            <span key={c.id} className="px-2 py-0.5 bg-slate-100 rounded text-[8px] font-black uppercase tracking-widest text-slate-500">{c.name}</span>
-                          ))}
-                        </div>
-                      )}
-                      <div className="flex items-center gap-4 text-[10px] font-bold text-slate-400">
-                        <span>⏱️ {exam.durationMinutes} min</span>
-                        {exam.questionCount !== undefined && <span>📝 {exam.questionCount} Q</span>}
+                          exam.isPublished ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'
+                        }`}>
+                          {exam.isPublished ? 'LIVE' : 'DRAFT'}
+                        </span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-6 shrink-0">
-                      <div className="text-right">
-                        <div className="text-xs font-black text-brand-green">{formatTime(exam.startTime!)}</div>
-                        <div className="text-[9px] font-bold text-slate-400">Start</div>
-                      </div>
-                      <div className="w-16 h-[1px] bg-slate-200"></div>
-                      <div className="text-right">
-                        <div className="text-xs font-black text-slate-600">{exam.endTime ? formatTime(exam.endTime) : '—'}</div>
-                        <div className="text-[9px] font-bold text-slate-400">End</div>
-                      </div>
-                    </div>
-                    <div className="flex gap-2 shrink-0">
-                      {editingId === exam.id ? (
-                        <div className="flex gap-2 items-center">
-                          <input type="datetime-local" value={editStart} onChange={e => setEditStart(e.target.value)} className="bg-white border-2 border-slate-200 rounded-lg px-2 py-1.5 text-[10px] font-bold w-40" />
-                          <input type="datetime-local" value={editEnd} onChange={e => setEditEnd(e.target.value)} className="bg-white border-2 border-slate-200 rounded-lg px-2 py-1.5 text-[10px] font-bold w-40" />
-                          <button onClick={() => saveSchedule(exam.id)} disabled={saving} className="px-3 py-1.5 bg-brand-green text-white rounded-lg text-[9px] font-black uppercase tracking-widest disabled:opacity-50">Save</button>
-                          <button onClick={() => setEditingId(null)} className="px-3 py-1.5 bg-slate-100 text-slate-500 rounded-lg text-[9px] font-black uppercase tracking-widest">X</button>
-                        </div>
-                      ) : (
-                        <>
-                          <button onClick={() => startEdit(exam)} className="px-4 py-2 bg-slate-50 text-slate-600 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-slate-100 transition-all border border-slate-200">
-                            Reschedule
-                          </button>
-                          <Link href={`/admin/exams/${exam.id}`} className="px-4 py-2 bg-brand-green/10 text-brand-green rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-brand-green/20 transition-all">
-                            Edit Exam
-                          </Link>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
+            )}
+
+            {/* Scheduled */}
+            <div className="flex items-center gap-4 mb-6">
+              <span className="w-2 h-8 bg-brand-green rounded-full"></span>
+              <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight">Scheduled Exams</h2>
+              <span className="px-3 py-1 bg-green-50 text-brand-green rounded-full text-[9px] font-black uppercase tracking-widest border border-green-100">
+                {scheduled.length} exam(s)
+              </span>
             </div>
-          ))
+
+            {scheduled.length === 0 ? (
+              <div className="premium-card p-16 text-center">
+                <p className="text-sm font-black text-slate-300 uppercase tracking-widest">No exams scheduled for this class</p>
+                <p className="text-[10px] font-bold text-slate-400 mt-2">Use the form above to schedule an exam</p>
+              </div>
+            ) : (
+              Object.entries(grouped).map(([dateKey, exams]) => (
+                <div key={dateKey} className="mb-10">
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className="text-lg">📅</span>
+                    <h3 className="text-base font-black text-slate-700 uppercase tracking-tight">{formatDate(dateKey)}</h3>
+                    <span className="text-[9px] font-bold text-slate-400">({exams.length})</span>
+                  </div>
+                  <div className="space-y-3">
+                    {exams.map(exam => (
+                      <div key={exam.id} className="premium-card p-5 flex flex-col md:flex-row md:items-center gap-4">
+                        <div className="flex items-center gap-4 shrink-0">
+                          <div className="text-right min-w-[70px]">
+                            <div className="text-sm font-black text-brand-green">{formatTime(exam.startTime!)}</div>
+                            <div className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Start</div>
+                          </div>
+                          <div className="w-10 h-[1px] bg-slate-200"></div>
+                          <div className="text-right min-w-[70px]">
+                            <div className="text-sm font-black text-slate-600">{exam.endTime ? formatTime(exam.endTime) : '—'}</div>
+                            <div className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">End</div>
+                          </div>
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-black text-slate-800 uppercase tracking-tight">{exam.title}</h4>
+                          <div className="flex items-center gap-3 text-[10px] font-bold text-slate-400 mt-1">
+                            <span>⏱️ {exam.durationMinutes} min</span>
+                            {exam.questionCount !== undefined && <span>📝 {exam.questionCount} Q</span>}
+                            <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest ${
+                              exam.isPublished ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'
+                            }`}>{exam.isPublished ? 'LIVE' : 'DRAFT'}</span>
+                          </div>
+                        </div>
+                        <Link
+                          href={`/admin/exams/${exam.id}`}
+                          className="px-4 py-2 bg-slate-50 text-slate-600 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-slate-100 transition-all border border-slate-200 shrink-0"
+                        >
+                          Edit Exam
+                        </Link>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))
+            )}
+          </>
         )}
       </main>
     </>

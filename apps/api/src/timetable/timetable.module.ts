@@ -3,12 +3,14 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Exam } from '../exams/entities/exam.entity';
 import { Submission } from '../submissions/entities/submission.entity';
 import { Question } from '../questions/entities/question.entity';
+import { Class } from '../classes/entities/class.entity';
+import { TeacherClass } from '../classes/entities/teacher-class.entity';
 import { ClassesModule } from '../classes/classes.module';
 import { TimetableController } from './timetable.controller';
 import { TimetableService } from './timetable.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Exam, Submission, Question]), ClassesModule],
+  imports: [TypeOrmModule.forFeature([Exam, Submission, Question, Class, TeacherClass]), ClassesModule],
   controllers: [TimetableController],
   providers: [TimetableService],
 })

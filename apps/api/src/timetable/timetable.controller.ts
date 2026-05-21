@@ -1,5 +1,5 @@
 import {
-  Controller, Get, Patch, Param, Body, UseGuards, Req,
+  Controller, Get, Post, Patch, Param, Query, Body, UseGuards, Req,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
@@ -11,6 +11,13 @@ class UpdateScheduleDto {
   endTime: string | null;
 }
 
+class ScheduleExamDto {
+  examId: string;
+  classId: string;
+  startTime: string;
+  endTime: string | null;
+}
+
 @Controller('timetable')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class TimetableController {
@@ -18,8 +25,22 @@ export class TimetableController {
 
   @Get()
   @Roles('super_admin', 'administrator', 'teacher')
-  async getTimetable(@Req() req) {
-    return this.timetableService.getTimetable(req.user);
+  async getTimetable(@Req() req, @Query('classId') classId?: string) {
+    return this.timetableService.getTimetable(req.user, classId);
+  }
+
+  @Post()
+  @Roles('super_admin', 'administrator', 'teacher')
+  async scheduleExam(@Body() dto: ScheduleExamDto, @Req() req) {
+    const startTime = new Date(dto.startTime);
+    const endTime = dto.endTime ? new Date(dto.endTime) : null;
+    return this.timetableService.scheduleExam(
+      dto.examId,
+      dto.classId,
+      startTime,
+      endTime,
+      req.user,
+    );
   }
 
   @Get('student')

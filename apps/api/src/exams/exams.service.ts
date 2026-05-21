@@ -22,10 +22,33 @@ export class ExamsService {
   ) {}
 
   async create(dto: CreateExamDto, adminUser: any): Promise<Exam> {
+    const { targetClassIds, ...rest } = dto;
+
     const exam = this.examRepository.create({
-      ...dto,
+      ...rest,
       createdBy: adminUser,
     });
+
+    if (targetClassIds && targetClassIds.length > 0) {
+      if (adminUser.role === 'teacher') {
+        const teacherClasses = await this.teacherClassRepository.find({
+          where: { teacherId: adminUser.id },
+        });
+        const allowedClassIds = new Set(teacherClasses.map(tc => tc.classId));
+        for (const classId of targetClassIds) {
+          if (!allowedClassIds.has(classId)) {
+            throw new ForbiddenException(`You are not assigned to class ${classId}`);
+          }
+        }
+      }
+
+      const classes = await this.classRepository.findByIds(targetClassIds);
+      if (classes.length !== targetClassIds.length) {
+        throw new NotFoundException('One or more classes not found');
+      }
+      exam.targetClasses = classes;
+    }
+
     return this.examRepository.save(exam);
   }
 
@@ -41,11 +64,21 @@ export class ExamsService {
     });
   }
 
-  async findByTeacher(teacherId: string, classId?: string): Promise<Exam[]> {
+  async findAllWithQuestionCount(): Promise<any[]> {
+    return this.examRepository
+      .createQueryBuilder('exam')
+      .leftJoinAndSelect('exam.createdBy', 'createdBy')
+      .leftJoinAndSelect('exam.targetClasses', 'targetClasses')
+      .loadRelationCountAndMap('exam.questionCount', 'exam.questions')
+      .getMany();
+  }
+
+  async findByTeacher(teacherId: string, classId?: string): Promise<any[]> {
     const qb = this.examRepository
       .createQueryBuilder('exam')
       .leftJoinAndSelect('exam.createdBy', 'createdBy')
       .leftJoinAndSelect('exam.targetClasses', 'targetClasses')
+      .loadRelationCountAndMap('exam.questionCount', 'exam.questions')
       .where('exam.createdById = :teacherId', { teacherId });
 
     if (classId) {
@@ -60,6 +93,20 @@ export class ExamsService {
       where: { id },
       relations: ['createdBy'],
     });
+    if (!exam) {
+      throw new NotFoundException('Exam not found');
+    }
+    return exam;
+  }
+
+  async findOneWithQuestionCount(id: string): Promise<any> {
+    const exam = await this.examRepository
+      .createQueryBuilder('exam')
+      .leftJoinAndSelect('exam.createdBy', 'createdBy')
+      .leftJoinAndSelect('exam.targetClasses', 'targetClasses')
+      .loadRelationCountAndMap('exam.questionCount', 'exam.questions')
+      .where('exam.id = :id', { id })
+      .getOne();
     if (!exam) {
       throw new NotFoundException('Exam not found');
     }

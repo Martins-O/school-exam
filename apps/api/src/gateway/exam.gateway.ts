@@ -7,7 +7,7 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { UseGuards, Logger } from '@nestjs/common';
-import { WsJwtGuard } from '../auth/ws-jwt.guard'; // I might need to create this
+import { WsJwtGuard } from '../auth/ws-jwt.guard';
 
 @UseGuards(WsJwtGuard)
 @WebSocketGateway({

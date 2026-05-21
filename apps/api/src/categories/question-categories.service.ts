@@ -1,8 +1,7 @@
 import { Injectable, NotFoundException, ForbiddenException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { QuestionCategory } from './entities/question-category.entity';
-import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class QuestionCategoriesService {
@@ -59,6 +58,6 @@ export class QuestionCategoriesService {
 
   async findByIds(ids: string[]): Promise<QuestionCategory[]> {
     if (!ids || ids.length === 0) return [];
-    return this.categoryRepo.findByIds(ids);
+    return this.categoryRepo.findBy({ id: In(ids) });
   }
 }

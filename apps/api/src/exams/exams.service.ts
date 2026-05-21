@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { Exam } from './entities/exam.entity';
 import { Question } from '../questions/entities/question.entity';
 import { Class } from '../classes/entities/class.entity';
@@ -42,7 +42,7 @@ export class ExamsService {
         }
       }
 
-      const classes = await this.classRepository.findByIds(targetClassIds);
+      const classes = await this.classRepository.findBy({ id: In(targetClassIds) });
       if (classes.length !== targetClassIds.length) {
         throw new NotFoundException('One or more classes not found');
       }
@@ -64,13 +64,18 @@ export class ExamsService {
     });
   }
 
-  async findAllWithQuestionCount(): Promise<any[]> {
-    return this.examRepository
+  async findAllWithQuestionCount(user?: any): Promise<any[]> {
+    const qb = this.examRepository
       .createQueryBuilder('exam')
       .leftJoinAndSelect('exam.createdBy', 'createdBy')
       .leftJoinAndSelect('exam.targetClasses', 'targetClasses')
-      .loadRelationCountAndMap('exam.questionCount', 'exam.questions')
-      .getMany();
+      .loadRelationCountAndMap('exam.questionCount', 'exam.questions');
+
+    if (user && user.role === 'teacher') {
+      qb.where('exam.createdById = :teacherId', { teacherId: user.id });
+    }
+
+    return qb.getMany();
   }
 
   async findByTeacher(teacherId: string, classId?: string): Promise<any[]> {
@@ -182,7 +187,7 @@ export class ExamsService {
     }
 
     // Verify all classes exist
-    const classes = await this.classRepository.findByIds(classIds);
+    const classes = await this.classRepository.findBy({ id: In(classIds) });
     if (classes.length !== classIds.length) {
       throw new NotFoundException('One or more classes not found');
     }

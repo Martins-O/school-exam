@@ -58,7 +58,7 @@ export default function AdminDashboard() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50/50 font-sans selection:bg-green-100 pb-20">
+    <div className="min-h-screen bg-transparent font-sans selection:bg-brand-green/20 selection:text-brand-green-dark pb-20">
       <AdminHeader 
         subtitle="Command Center"
         actions={
@@ -90,12 +90,12 @@ export default function AdminDashboard() {
           </div>
           
           <div className="flex gap-4">
-            <button className="px-8 py-4 bg-white border-2 border-slate-100 rounded-2xl font-black text-[10px] uppercase tracking-widest text-slate-400 hover:text-brand-green hover:border-brand-green/20 transition-all shadow-sm">
-              Global Audit
-            </button>
-            <button className="px-8 py-4 bg-brand-green text-white rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all shadow-2xl shadow-green-900/20 active:scale-95">
-              Protocol Sync
-            </button>
+            <Link href="/admin/results" className="px-8 py-4 bg-white border-2 border-slate-100 rounded-2xl font-black text-[10px] uppercase tracking-widest text-slate-500 hover:text-brand-green hover:border-brand-green/20 transition-all shadow-sm">
+              View Results
+            </Link>
+            <Link href="/admin/exams" className="px-8 py-4 bg-brand-green text-white rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all shadow-2xl shadow-green-900/20 active:scale-95 flex items-center">
+              Manage Exams
+            </Link>
           </div>
         </header>
 

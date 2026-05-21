@@ -33,7 +33,7 @@ export class ClassesService {
     return this.classRepo
       .createQueryBuilder('c')
       .leftJoinAndSelect('c.createdBy', 'createdBy')
-      .loadRelationCountAndMap('c.studentCount', 'c.classStudents')
+      .loadRelationCountAndMap('c.studentCount', 'c.classStudents', 'cs', qb => qb.where('cs.isActive = true'))
       .loadRelationCountAndMap('c.teacherCount', 'c.teacherClasses')
       .getMany();
   }
@@ -42,7 +42,7 @@ export class ClassesService {
     const classEntity = await this.classRepo
       .createQueryBuilder('c')
       .leftJoinAndSelect('c.createdBy', 'createdBy')
-      .loadRelationCountAndMap('c.studentCount', 'c.classStudents')
+      .loadRelationCountAndMap('c.studentCount', 'c.classStudents', 'cs', qb => qb.where('cs.isActive = true'))
       .loadRelationCountAndMap('c.teacherCount', 'c.teacherClasses')
       .where('c.id = :id', { id })
       .getOne();
@@ -56,12 +56,15 @@ export class ClassesService {
     const classStudents = await this.classStudentRepo.find({
       where: { classId },
       relations: ['student'],
+      order: { enrolledAt: 'DESC' },
     });
     return classStudents.map(cs => ({
       id: cs.student.id,
       name: cs.student.name,
       email: cs.student.email,
       enrolledAt: cs.enrolledAt,
+      isActive: cs.isActive,
+      unenrolledAt: cs.unenrolledAt,
     }));
   }
 
@@ -78,12 +81,18 @@ export class ClassesService {
       throw new BadRequestException('User is not a student');
     }
 
-    // Check if student is already enrolled in any class
+    // Check if student is already actively enrolled in any class
     const existingEnrollment = await this.classStudentRepo.findOne({
-      where: { studentId },
+      where: { studentId, isActive: true },
     });
     if (existingEnrollment) {
-      throw new BadRequestException('Student is already enrolled in a class. Each student can only belong to one class.');
+      if (existingEnrollment.classId === classId) {
+        throw new BadRequestException('Student is already actively enrolled in this class.');
+      }
+      // Reassign: Mark previous enrollment as inactive
+      existingEnrollment.isActive = false;
+      existingEnrollment.unenrolledAt = new Date();
+      await this.classStudentRepo.save(existingEnrollment);
     }
 
     // Enroll student
@@ -99,12 +108,14 @@ export class ClassesService {
 
   async removeStudent(classId: string, studentId: string): Promise<void> {
     const classStudent = await this.classStudentRepo.findOne({
-      where: { classId, studentId },
+      where: { classId, studentId, isActive: true },
     });
     if (!classStudent) {
-      throw new NotFoundException('Student not enrolled in this class');
+      throw new NotFoundException('Student is not actively enrolled in this class');
     }
-    await this.classStudentRepo.remove(classStudent);
+    classStudent.isActive = false;
+    classStudent.unenrolledAt = new Date();
+    await this.classStudentRepo.save(classStudent);
   }
 
   async getTeachers(classId: string): Promise<any[]> {
@@ -172,7 +183,7 @@ export class ClassesService {
 
   async getStudentClasses(studentId: string): Promise<Class[]> {
     const classStudents = await this.classStudentRepo.find({
-      where: { studentId },
+      where: { studentId, isActive: true },
       relations: ['class', 'class.createdBy'],
     });
     return classStudents.map(cs => cs.class);

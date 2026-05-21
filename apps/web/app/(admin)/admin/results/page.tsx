@@ -71,32 +71,32 @@ export default function AdminResultsPage() {
           <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.3em]">{results.length} CERTIFIED RECORDS DETECTED IN REPOSITORY</p>
         </div>
 
-        <div className="premium-card overflow-hidden bg-white shadow-2xl shadow-black/[0.03]">
-          <table className="w-full text-left">
+        <div className="institutional-table-wrapper">
+          <table className="institutional-table">
             <thead>
-              <tr className="bg-slate-50/80 text-[10px] uppercase tracking-[0.3em] font-black text-slate-400 border-b border-slate-100">
-                <th className="px-10 py-6">Candidate Identity</th>
-                <th className="px-10 py-6">Examination Terminal</th>
-                <th className="px-10 py-6 text-center">Valuation Metric</th>
-                <th className="px-10 py-6 text-center">Operational State</th>
-                <th className="px-10 py-6 text-right">Audit Timestamp</th>
+              <tr>
+                <th>Candidate Identity</th>
+                <th>Examination Terminal</th>
+                <th className="text-center">Valuation Metric</th>
+                <th className="text-center">Operational State</th>
+                <th className="text-right">Audit Timestamp</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-50">
+            <tbody>
               {results.map((r) => (
                 <tr
                   key={r.submissionId}
                   onClick={() => router.push(`/results/${r.submissionId}`)}
-                  className="hover:bg-slate-50/50 cursor-pointer transition-colors group"
+                  className="cursor-pointer group"
                 >
-                  <td className="px-10 py-8">
+                  <td>
                     <div className="font-black text-slate-900 group-hover:text-brand-green transition-colors uppercase tracking-tight text-sm">{r.studentName}</div>
-                    <div className="text-[10px] font-black text-slate-300 mt-1 uppercase tracking-widest">{r.studentEmail}</div>
+                    <div className="text-[10px] font-black text-slate-400 mt-1 uppercase tracking-widest">{r.studentEmail}</div>
                   </td>
-                  <td className="px-10 py-8 text-[11px] font-black text-slate-500 uppercase tracking-tighter max-w-[200px]">
+                  <td className="text-[11px] font-black text-slate-500 uppercase tracking-tighter max-w-[200px]">
                     {r.examTitle}
                   </td>
-                  <td className="px-10 py-8">
+                  <td>
                     <div className="flex flex-col items-center">
                        <div className={`px-5 py-2 rounded-xl font-black text-sm shadow-sm border ${
                         r.percentage >= 70
@@ -112,7 +112,7 @@ export default function AdminResultsPage() {
                       </div>
                     </div>
                   </td>
-                  <td className="px-10 py-8 text-center">
+                  <td className="text-center">
                     <span className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest border ${
                       r.status === 'submitted'
                         ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
@@ -121,7 +121,7 @@ export default function AdminResultsPage() {
                       {r.status}
                     </span>
                   </td>
-                  <td className="px-10 py-8 text-right font-black text-[10px] text-slate-400 uppercase tracking-widest">
+                  <td className="text-right font-black text-[10px] text-slate-400 uppercase tracking-widest">
                     <div className="text-slate-600">{new Date(r.submittedAt).toLocaleDateString()}</div>
                     <div className="opacity-40 text-[9px] mt-1">{new Date(r.submittedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
                   </td>
@@ -129,8 +129,8 @@ export default function AdminResultsPage() {
               ))}
               {results.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-10 py-40 text-center">
-                    <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-8">
+                  <td colSpan={5} className="py-20 text-center">
+                    <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
                        <svg className="w-8 h-8 text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 17v-2a4 4 0 00-4-4H5m11 9a4 4 0 01-4-4v-2" /></svg>
                     </div>
                     <h3 className="text-xl font-black text-slate-300 uppercase tracking-[0.3em] mb-2">Audit Registry Vacant</h3>

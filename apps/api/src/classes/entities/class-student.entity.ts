@@ -3,7 +3,6 @@ import { User } from '../../users/entities/user.entity';
 import { Class } from './class.entity';
 
 @Entity('class_students')
-@Unique(['classId', 'studentId'])
 export class ClassStudent {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -24,4 +23,10 @@ export class ClassStudent {
 
   @CreateDateColumn()
   enrolledAt: Date;
+
+  @Column({ default: true })
+  isActive: boolean;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  unenrolledAt: Date;
 }

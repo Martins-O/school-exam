@@ -55,6 +55,7 @@ export default function UserManagementPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [selectedClassIds, setSelectedClassIds] = useState<string[]>([]);
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
   const [newStudents, setNewStudents] = useState<NewStudentEntry[]>([]);
@@ -129,6 +130,7 @@ export default function UserManagementPage() {
     setName('');
     setEmail('');
     setPassword('');
+    setShowPassword(false);
     setSelectedClassIds([]);
     setSelectedStudentIds([]);
     setNewStudents([]);
@@ -136,11 +138,6 @@ export default function UserManagementPage() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (selectedRole === 'student' && selectedClassIds.length === 0) {
-      toast.error('Students must be assigned to at least one class');
-      return;
-    }
 
     if (selectedRole === 'parent' && selectedStudentIds.length === 0 && newStudents.length === 0) {
       toast.error('Parents must be linked to at least one student');
@@ -241,40 +238,40 @@ export default function UserManagementPage() {
           </div>
         </div>
 
-        <div className="premium-card overflow-hidden bg-white shadow-2xl shadow-black/[0.03]">
-          <table className="w-full text-left">
+        <div className="institutional-table-wrapper">
+          <table className="institutional-table">
             <thead>
-              <tr className="bg-slate-50/80 text-[10px] uppercase tracking-[0.3em] font-black text-slate-400 border-b border-slate-100">
-                <th className="px-10 py-6">Identity Identifier</th>
-                <th className="px-10 py-6">Communication Node (Email)</th>
-                <th className="px-10 py-6 text-center">Authorization Level</th>
-                <th className="px-10 py-6 text-center">Operational Status</th>
-                <th className="px-10 py-6 text-right">Registry Action</th>
+              <tr>
+                <th>Identity Identifier</th>
+                <th>Communication Node (Email)</th>
+                <th className="text-center">Authorization Level</th>
+                <th className="text-center">Operational Status</th>
+                <th className="text-right">Registry Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-50">
+            <tbody>
               {filteredUsers.map((u) => (
-                <tr key={u.id} className="hover:bg-slate-50/50 transition-colors group">
-                  <td className="px-10 py-8">
+                <tr key={u.id} className="group">
+                  <td>
                     <div className="font-black text-slate-900 group-hover:text-brand-green transition-colors uppercase tracking-tight text-sm">{u.name}</div>
-                    <div className="text-[9px] font-black text-slate-300 mt-1 uppercase tracking-widest">ID: {u.id.split('-')[0]}</div>
+                    <div className="text-[9px] font-black text-slate-400 mt-1 uppercase tracking-widest">ID: {u.id.split('-')[0]}</div>
                   </td>
-                  <td className="px-10 py-8 font-mono text-slate-500 text-xs tracking-tight">{u.email}</td>
-                  <td className="px-10 py-8 text-center">
+                  <td className="font-mono text-slate-500 text-xs tracking-tight">{u.email}</td>
+                  <td className="text-center">
                     <span className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest shadow-sm border border-transparent ${ROLE_COLORS[u.role] || 'bg-slate-50 text-slate-600'}`}>
                       {u.role === 'super_admin' ? 'Root Administrator' : u.role.replace('_', ' ')}
                     </span>
                   </td>
-                  <td className="px-10 py-8 text-center">
+                  <td className="text-center">
                     <span className={`flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest ${u.isActive ? 'text-emerald-600' : 'text-slate-400'}`}>
                       <span className={`w-1.5 h-1.5 rounded-full ${u.isActive ? 'bg-emerald-500 animate-pulse ring-4 ring-emerald-100' : 'bg-slate-300 ring-4 ring-slate-50'}`}></span>
                       {u.isActive ? 'VIGILANT' : 'DECOMMISSIONED'}
                     </span>
                   </td>
-                  <td className="px-10 py-8 text-right">
+                  <td className="text-right">
                     <button 
                       onClick={() => handleToggleStatus(u)}
-                      className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 border ${
+                      className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 border ${
                         u.isActive 
                           ? 'text-amber-600 border-amber-100 hover:bg-amber-50' 
                           : 'text-brand-green border-green-100 hover:bg-green-50'
@@ -287,8 +284,8 @@ export default function UserManagementPage() {
               ))}
               {filteredUsers.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-10 py-40 text-center">
-                    <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-8">
+                  <td colSpan={5} className="py-20 text-center">
+                    <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
                        <svg className="w-8 h-8 text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
                     </div>
                     <h3 className="text-xl font-black text-slate-300 uppercase tracking-[0.3em] mb-2">Registry Subset Empty</h3>
@@ -369,14 +366,31 @@ export default function UserManagementPage() {
                     />
                     <label>Authorized Communication Node (Email)</label>
                   </div>
-                  <div className="floating-label-group">
+                  <div className="floating-label-group relative">
                     <input 
-                      type="password" required value={password} onChange={e => setPassword(e.target.value)}
-                      className="institutional-input pt-10"
+                      type={showPassword ? 'text' : 'password'} required value={password} onChange={e => setPassword(e.target.value)}
+                      className="institutional-input pt-10 pr-14"
                       placeholder=" "
                       minLength={8}
                     />
                     <label>Cryptographic Access Key (Password)</label>
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 right-0 pr-6 flex items-center text-slate-400 hover:text-brand-green transition-colors z-10 focus:outline-none"
+                      title={showPassword ? 'Hide passkey' : 'Show passkey'}
+                    >
+                      {showPassword ? (
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                        </svg>
+                      ) : (
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                      )}
+                    </button>
                   </div>
                 </div>
 
@@ -481,14 +495,31 @@ export default function UserManagementPage() {
                                 />
                                 <label>Candidate Node (Email)</label>
                               </div>
-                              <div className="floating-label-group">
+                              <div className="floating-label-group relative">
                                 <input 
-                                  type="password" required value={student.password} onChange={e => updateNewStudent(index, 'password', e.target.value)}
-                                  className="institutional-input pt-10 text-xs"
+                                  type={showPassword ? 'text' : 'password'} required value={student.password} onChange={e => updateNewStudent(index, 'password', e.target.value)}
+                                  className="institutional-input pt-10 pr-14 text-xs"
                                   placeholder=" "
                                   minLength={8}
                                 />
                                 <label>Access Key (Password)</label>
+                                <button
+                                  type="button"
+                                  onClick={() => setShowPassword(!showPassword)}
+                                  className="absolute inset-y-0 right-0 pr-6 flex items-center text-slate-400 hover:text-brand-green transition-colors z-10 focus:outline-none"
+                                  title={showPassword ? 'Hide passkey' : 'Show passkey'}
+                                >
+                                  {showPassword ? (
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                                    </svg>
+                                  ) : (
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                  )}
+                                </button>
                               </div>
                             </div>
                           </div>

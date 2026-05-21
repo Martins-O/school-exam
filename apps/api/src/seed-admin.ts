@@ -17,19 +17,20 @@ async function seedAdmin() {
 
   await dataSource.initialize();
 
-  const password = 'Admin@123';
+  const email = process.env.ADMIN_EMAIL || 'admin@cbt.com';
+  const password = process.env.ADMIN_PASSWORD || 'password123';
   const hashedPassword = await bcrypt.hash(password, 12);
 
   const result = await dataSource.query(`
     INSERT INTO "users" ("name", "email", "password", "role", "isActive")
-    VALUES ('Super Admin', 'admin@cbt.com', $1, 'super_admin', true)
+    VALUES ('Super Admin', $1, $2, 'super_admin', true)
     ON CONFLICT ("email") 
-    DO UPDATE SET "password" = $1, "role" = 'super_admin', "isActive" = true
-  `, [hashedPassword]);
+    DO UPDATE SET "password" = $2, "role" = 'super_admin', "isActive" = true
+  `, [email, hashedPassword]);
 
   console.log('✅ Admin account created/updated');
-  console.log('   Email: admin@cbt.com');
-  console.log('   Password: Admin@123');
+  console.log(`   Email: ${email}`);
+  console.log(`   Password: ${password}`);
   console.log('   Role: super_admin');
 
   await dataSource.destroy();

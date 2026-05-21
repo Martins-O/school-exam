@@ -32,6 +32,8 @@ export default function AdminClassesPage() {
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [showEnroll, setShowEnroll] = useState(false);
+  const [showRoster, setShowRoster] = useState(false);
+  const [classRoster, setClassRoster] = useState<any[]>([]);
   const [showAssignTeacher, setShowAssignTeacher] = useState(false);
   const [selectedClass, setSelectedClass] = useState<Class | null>(null);
   const [deleteModal, setDeleteModal] = useState<{ open: boolean; id: string; name: string }>({
@@ -42,8 +44,8 @@ export default function AdminClassesPage() {
   
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [selectedStudent, setSelectedStudent] = useState('');
-  const [selectedTeacher, setSelectedTeacher] = useState('');
+  const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
+  const [selectedTeachers, setSelectedTeachers] = useState<string[]>([]);
   const router = useRouter();
 
   const refreshData = () => {
@@ -89,28 +91,55 @@ export default function AdminClassesPage() {
   };
 
   const handleEnroll = async () => {
-    if (!selectedClass || !selectedStudent) return;
+    if (!selectedClass || selectedStudents.length === 0) return;
     try {
-      await api.post(`/classes/${selectedClass.id}/students`, { studentId: selectedStudent });
-      toast.success('Student enrolled');
+      for (const id of selectedStudents) {
+        await api.post(`/classes/${selectedClass.id}/students`, { studentId: id });
+      }
+      toast.success('Student(s) enrolled successfully');
       setShowEnroll(false);
-      setSelectedStudent('');
+      setSelectedStudents([]);
       refreshData();
     } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Enrollment failed');
+      toast.error(err.response?.data?.message || 'Enrollment failed for one or more students');
+      refreshData();
+    }
+  };
+
+  const loadClassRoster = async (classId: string) => {
+    try {
+      const res = await api.get(`/classes/${classId}/students`);
+      setClassRoster(res.data);
+    } catch (err) {
+      toast.error('Failed to load roster');
+    }
+  };
+
+  const handleRemoveStudent = async (studentId: string) => {
+    if (!selectedClass) return;
+    try {
+      await api.delete(`/classes/${selectedClass.id}/students/${studentId}`);
+      toast.success('Student removed from class');
+      loadClassRoster(selectedClass.id);
+      refreshData();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to remove student');
     }
   };
 
   const handleAssignTeacher = async () => {
-    if (!selectedClass || !selectedTeacher) return;
+    if (!selectedClass || selectedTeachers.length === 0) return;
     try {
-      await api.post(`/classes/${selectedClass.id}/teachers`, { teacherId: selectedTeacher });
-      toast.success('Teacher assigned');
+      for (const id of selectedTeachers) {
+        await api.post(`/classes/${selectedClass.id}/teachers`, { teacherId: id });
+      }
+      toast.success('Advisor(s) assigned');
       setShowAssignTeacher(false);
-      setSelectedTeacher('');
+      setSelectedTeachers([]);
       refreshData();
     } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Assignment failed');
+      toast.error(err.response?.data?.message || 'Assignment failed for one or more advisors');
+      refreshData();
     }
   };
 
@@ -237,17 +266,25 @@ export default function AdminClassesPage() {
 
               <div className="p-8 bg-slate-50/50 border-t border-slate-100 flex flex-col gap-3">
                 <button
-                  onClick={() => { setSelectedClass(c); setShowEnroll(true); }}
-                  className="w-full px-6 py-4 bg-white hover:bg-indigo-600 hover:text-white border border-slate-100 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm active:scale-95"
+                  onClick={() => { setSelectedClass(c); loadClassRoster(c.id); setShowRoster(true); }}
+                  className="w-full px-6 py-4 bg-brand-green text-white hover:bg-green-800 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm shadow-green-900/10 active:scale-95"
                 >
-                  + Enroll Personnel
+                  Manage Roster
                 </button>
-                <button
-                  onClick={() => { setSelectedClass(c); setShowAssignTeacher(true); }}
-                  className="w-full px-6 py-4 bg-white hover:bg-brand-green hover:text-white border border-slate-100 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm active:scale-95"
-                >
-                  + Assign Advisor
-                </button>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => { setSelectedClass(c); setShowEnroll(true); }}
+                    className="w-full px-4 py-3 bg-white hover:bg-indigo-600 hover:text-white border border-slate-100 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all shadow-sm active:scale-95"
+                  >
+                    + Add Student
+                  </button>
+                  <button
+                    onClick={() => { setSelectedClass(c); setShowAssignTeacher(true); }}
+                    className="w-full px-4 py-3 bg-white hover:bg-brand-gold hover:text-brand-green-dark border border-slate-100 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all shadow-sm active:scale-95"
+                  >
+                    + Add Advisor
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -263,6 +300,89 @@ export default function AdminClassesPage() {
           </div>
         )}
       </main>
+
+      {/* Class Roster Modal */}
+      {showRoster && selectedClass && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-8 bg-slate-900/60 backdrop-blur-xl animate-in fade-in duration-300">
+          <div className="premium-card max-w-3xl w-full p-12 bg-white shadow-[0_0_100px_rgba(0,0,0,0.2)] max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between mb-10">
+              <div className="flex items-center gap-6">
+                <div className="w-16 h-16 bg-brand-green/10 text-brand-green rounded-2xl flex items-center justify-center text-2xl">
+                  📋
+                </div>
+                <div>
+                  <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Class Roster</h2>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Class Node: {selectedClass.name}</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => { setShowRoster(false); setClassRoster([]); }}
+                className="w-12 h-12 rounded-2xl bg-slate-50 text-slate-400 flex items-center justify-center hover:bg-slate-100 hover:text-slate-600 transition-all active:scale-90"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto min-h-[300px] border border-slate-100 rounded-2xl">
+              <table className="w-full text-left border-collapse">
+                <thead className="bg-slate-50 sticky top-0 z-10">
+                  <tr className="text-[9px] uppercase tracking-widest font-black text-slate-400 border-b border-slate-100">
+                    <th className="px-6 py-4">Candidate Identity</th>
+                    <th className="px-6 py-4">Status</th>
+                    <th className="px-6 py-4 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {classRoster.length === 0 ? (
+                    <tr>
+                      <td colSpan={3} className="px-6 py-16 text-center">
+                        <p className="text-xs font-black text-slate-300 uppercase tracking-widest">No candidates enrolled in this node.</p>
+                      </td>
+                    </tr>
+                  ) : classRoster.map((student) => (
+                    <tr key={student.id} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="font-black text-sm text-slate-800">{student.name}</div>
+                        <div className="text-[10px] text-slate-400 font-mono mt-1">{student.email}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        {student.isActive ? (
+                          <span className="px-3 py-1 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-lg text-[9px] font-black uppercase tracking-widest">
+                            Active
+                          </span>
+                        ) : (
+                          <span className="px-3 py-1 bg-slate-100 text-slate-500 border border-slate-200 rounded-lg text-[9px] font-black uppercase tracking-widest" title={`Unenrolled at ${new Date(student.unenrolledAt).toLocaleString()}`}>
+                            Archived
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        {student.isActive && (
+                          <button
+                            onClick={() => handleRemoveStudent(student.id)}
+                            className="text-[10px] font-black text-red-400 hover:text-red-600 uppercase tracking-widest transition-colors px-3 py-2 hover:bg-red-50 rounded-lg"
+                          >
+                            Remove
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            
+            <div className="mt-8 pt-6 border-t border-slate-100 flex justify-end">
+              <button
+                onClick={() => { setShowRoster(false); setShowEnroll(true); }}
+                className="px-8 py-4 bg-indigo-600 text-white rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-900/20 active:scale-95"
+              >
+                + Add Candidate
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Enroll Student Modal */}
       {showEnroll && selectedClass && (
@@ -281,21 +401,21 @@ export default function AdminClassesPage() {
             <div className="space-y-10">
               <div className="floating-label-group">
                 <select 
-                  value={selectedStudent} onChange={e => setSelectedStudent(e.target.value)}
-                  className="institutional-input pt-10"
+                  multiple
+                  value={selectedStudents} onChange={e => setSelectedStudents(Array.from(e.target.selectedOptions, option => option.value))}
+                  className="institutional-input pt-8 pb-4 h-32"
                   required
                 >
-                  <option value="">Select personnel...</option>
                   {students.map(s => (
                     <option key={s.id} value={s.id}>{s.name} ({s.email})</option>
                   ))}
                 </select>
-                <label>Target Candidate</label>
+                <label>Target Candidates (Hold Ctrl/Cmd to select multiple)</label>
               </div>
 
               <div className="flex gap-4 pt-4">
                 <button 
-                  type="button" onClick={() => { setShowEnroll(false); setSelectedStudent(''); }}
+                  type="button" onClick={() => { setShowEnroll(false); setSelectedStudents([]); }}
                   className="flex-1 px-8 py-5 bg-slate-50 text-slate-400 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-slate-100 transition-all"
                 >
                   Cancel Protocol
@@ -329,21 +449,21 @@ export default function AdminClassesPage() {
             <div className="space-y-10">
               <div className="floating-label-group">
                 <select 
-                  value={selectedTeacher} onChange={e => setSelectedTeacher(e.target.value)}
-                  className="institutional-input pt-10"
+                  multiple
+                  value={selectedTeachers} onChange={e => setSelectedTeachers(Array.from(e.target.selectedOptions, option => option.value))}
+                  className="institutional-input pt-8 pb-4 h-32"
                   required
                 >
-                  <option value="">Select advisor...</option>
                   {teachers.map(t => (
                     <option key={t.id} value={t.id}>{t.name} ({t.email})</option>
                   ))}
                 </select>
-                <label>Authorized Advisor</label>
+                <label>Authorized Advisors (Hold Ctrl/Cmd to select multiple)</label>
               </div>
 
               <div className="flex gap-4 pt-4">
                 <button 
-                  type="button" onClick={() => { setShowAssignTeacher(false); setSelectedTeacher(''); }}
+                  type="button" onClick={() => { setShowAssignTeacher(false); setSelectedTeachers([]); }}
                   className="flex-1 px-8 py-5 bg-slate-50 text-slate-400 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-slate-100 transition-all"
                 >
                   Cancel Protocol

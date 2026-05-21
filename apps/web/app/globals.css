@@ -138,4 +138,33 @@
   .glow-green {
     box-shadow: 0 0 15px rgba(15, 81, 50, 0.1);
   }
+
+  /* Institutional Table System */
+  .institutional-table-wrapper {
+    @apply premium-card overflow-x-auto bg-white border border-slate-200 shadow-sm rounded-2xl;
+  }
+  
+  .institutional-table {
+    @apply w-full text-left border-collapse min-w-[800px];
+  }
+  
+  .institutional-table thead {
+    @apply bg-slate-100/50 border-b-2 border-slate-200/80;
+  }
+  
+  .institutional-table th {
+    @apply px-6 py-4 text-[11px] font-black uppercase tracking-widest text-slate-600 whitespace-nowrap;
+  }
+  
+  .institutional-table tbody {
+    @apply divide-y divide-slate-100;
+  }
+  
+  .institutional-table tbody tr {
+    @apply hover:bg-brand-green/5 transition-colors duration-150 bg-white;
+  }
+  
+  .institutional-table td {
+    @apply px-6 py-4 align-middle text-sm text-slate-700;
+  }
 }

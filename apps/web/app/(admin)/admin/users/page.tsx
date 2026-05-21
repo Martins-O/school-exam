@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
-import Link from 'next/link';
 import AdminHeader from '@/components/admin/AdminHeader';
 import { useRouter } from 'next/navigation';
 import PortalSpinner from '@/components/ui/PortalSpinner';
@@ -56,6 +55,7 @@ export default function UserManagementPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [subFormShowPassword, setSubFormShowPassword] = useState(false);
   const [selectedClassIds, setSelectedClassIds] = useState<string[]>([]);
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
   const [newStudents, setNewStudents] = useState<NewStudentEntry[]>([]);
@@ -497,7 +497,7 @@ export default function UserManagementPage() {
                               </div>
                               <div className="floating-label-group relative">
                                 <input 
-                                  type={showPassword ? 'text' : 'password'} required value={student.password} onChange={e => updateNewStudent(index, 'password', e.target.value)}
+                                  type={subFormShowPassword ? 'text' : 'password'} required value={student.password} onChange={e => updateNewStudent(index, 'password', e.target.value)}
                                   className="institutional-input pt-10 pr-14 text-xs"
                                   placeholder=" "
                                   minLength={8}
@@ -505,11 +505,11 @@ export default function UserManagementPage() {
                                 <label>Access Key (Password)</label>
                                 <button
                                   type="button"
-                                  onClick={() => setShowPassword(!showPassword)}
+                                  onClick={() => setSubFormShowPassword(!subFormShowPassword)}
                                   className="absolute inset-y-0 right-0 pr-6 flex items-center text-slate-400 hover:text-brand-green transition-colors z-10 focus:outline-none"
-                                  title={showPassword ? 'Hide passkey' : 'Show passkey'}
+                                  title={subFormShowPassword ? 'Hide passkey' : 'Show passkey'}
                                 >
-                                  {showPassword ? (
+                                  {subFormShowPassword ? (
                                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
                                     </svg>
@@ -558,7 +558,7 @@ export default function UserManagementPage() {
       )}
 
       <footer className="max-w-7xl mx-auto px-8 py-12 text-center border-t border-slate-100">
-        <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.5em]">Institutional Identity Matrix v2.1.4 © 2024</p>
+        <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.5em]">Institutional Identity Matrix v2.1.4 © {new Date().getFullYear()}</p>
       </footer>
     </div>
   );

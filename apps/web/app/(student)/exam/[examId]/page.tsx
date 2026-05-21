@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback, useRef, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import api from '@/lib/api';
 import { useAuthStore } from '@/lib/store/authStore';
@@ -16,6 +16,7 @@ export default function ExamRoomPage() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const autosaveTimer = useRef<NodeJS.Timeout>();
+  const [overlayDismissed, setOverlayDismissed] = useState(false);
 
   const {
     submissionId, questions, answers, flaggedQuestions,
@@ -25,6 +26,7 @@ export default function ExamRoomPage() {
   } = useExamStore();
 
   const startExam = useCallback(async () => {
+    setStatus('loading');
     try {
       const res = await api.post(`/submissions/start/${examId}`);
       setExam(res.data);
@@ -37,7 +39,7 @@ export default function ExamRoomPage() {
       toast.error(err.response?.data?.message || 'Ineligibility detected');
       router.push('/dashboard');
     }
-  }, [examId, setExam, router]);
+  }, [examId, setExam, setStatus, router]);
 
   useEffect(() => {
     startExam();
@@ -67,7 +69,7 @@ export default function ExamRoomPage() {
   }, [submissionId, status, setRemainingSeconds, setStatus, router]);
 
   const startAutosaveLoop = useCallback(() => {
-    autosaveTimer.current = setInterval(() => saveBatch(), 5000);
+    autosaveTimer.current = setInterval(() => saveBatch(), 4000);
   }, [saveBatch]);
 
   useEffect(() => {
@@ -79,7 +81,8 @@ export default function ExamRoomPage() {
     if (!submissionId || !confirm('Final submission will terminate this session. Proceed?')) return;
     setStatus('submitting');
     try {
-      await api.post(`/submissions/${submissionId}/submit`, { answers });
+      const { answers: currentAnswers } = useExamStore.getState();
+      await api.post(`/submissions/${submissionId}/submit`, { answers: currentAnswers });
       setStatus('submitted');
       toast.success('Examination Completed Successfully');
       if (document.fullscreenElement) document.exitFullscreen();
@@ -93,11 +96,24 @@ export default function ExamRoomPage() {
   const reportViolation = useCallback(async (type: 'tab_switch' | 'fullscreen_exit') => {
     if (!submissionId || status !== 'active') return;
     try {
-      await api.post(`/submissions/${submissionId}/violation`, { type });
+      const res = await api.post(`/submissions/${submissionId}/violation`, { type });
+      if (res.data.autoSubmitted) {
+        setStatus('submitted');
+        toast.error('Exam auto-submitted due to violations', { icon: '🛡️' });
+        if (document.fullscreenElement) document.exitFullscreen();
+        router.push(`/results/${submissionId}`);
+        return;
+      }
       incrementViolations();
+      setOverlayDismissed(false);
       toast.error('SECURITY ALERT: ACTION RECORDED', { icon: '🛡️', duration: 4000 });
-    } catch {}
-  }, [submissionId, status, incrementViolations]);
+    } catch (err: any) {
+      if (err.response?.status === 409) {
+        setStatus('submitted');
+        router.push(`/results/${submissionId}`);
+      }
+    }
+  }, [submissionId, status, incrementViolations, setStatus, router]);
 
   const setupAntiCheat = useCallback(() => {
     const handleVisibilityChange = () => {
@@ -108,12 +124,11 @@ export default function ExamRoomPage() {
     };
     const handleKey = (e: KeyboardEvent) => {
       if (
-        (e.ctrlKey || e.metaKey) && ['c','v','x','j','u','p','a'].includes(e.key.toLowerCase()) ||
+        (e.ctrlKey || e.metaKey) && ['c','v','a','u'].includes(e.key.toLowerCase()) ||
         e.key === 'F12' ||
         (e.ctrlKey && e.shiftKey && e.key === 'I')
       ) {
         e.preventDefault();
-        if (status === 'active') reportViolation('tab_switch');
       }
     };
     const handleContext = (e: MouseEvent) => e.preventDefault();
@@ -194,7 +209,6 @@ export default function ExamRoomPage() {
             <p className="text-[10px] font-black uppercase tracking-widest text-white/60 mb-1">TIME REMAINING</p>
             <ExamTimer
               remainingSeconds={remainingSeconds}
-              isCritical={remainingSeconds < 300}
             />
           </div>
         </div>
@@ -212,9 +226,9 @@ export default function ExamRoomPage() {
                   <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">of {questions.length} questions</span>
                 </div>
                 <button
-                  onClick={() => toggleFlag(questions[currentIndex]?.id)}
+                  onClick={() => questions[currentIndex] && toggleFlag(questions[currentIndex].id)}
                   className={`px-4 py-1.5 rounded text-[10px] font-black uppercase tracking-widest transition-all ${
-                    flaggedQuestions.includes(questions[currentIndex]?.id)
+                    questions[currentIndex] && flaggedQuestions.includes(questions[currentIndex].id)
                       ? 'bg-amber-100 text-amber-700 border-2 border-amber-500'
                       : 'bg-slate-200 text-slate-500 hover:bg-amber-100 hover:text-amber-600'
                   }`}
@@ -278,11 +292,11 @@ export default function ExamRoomPage() {
         </main>
       )}
 
-      {violations > 0 && (
+      {violations > 0 && !overlayDismissed && (
         <ViolationOverlay
           violations={violations}
           maxViolations={maxViolations}
-          onDismiss={() => {}}
+          onDismiss={() => setOverlayDismissed(true)}
         />
       )}
 

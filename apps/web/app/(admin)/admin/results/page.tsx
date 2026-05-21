@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
-import Link from 'next/link';
 import AdminHeader from '@/components/admin/AdminHeader';
 import PortalSpinner from '@/components/ui/PortalSpinner';
 
@@ -144,7 +143,7 @@ export default function AdminResultsPage() {
       </main>
 
       <footer className="max-w-7xl mx-auto px-8 py-12 text-center border-t border-slate-100">
-        <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.5em]">Institutional Analytics Engine © 2024</p>
+        <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.5em]">Institutional Analytics Engine © {new Date().getFullYear()}</p>
       </footer>
     </div>
   );

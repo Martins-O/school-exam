@@ -31,6 +31,12 @@ describe('Exam Flow (e2e)', () => {
     await dataSource.query('TRUNCATE TABLE submissions CASCADE');
     await dataSource.query('TRUNCATE TABLE questions CASCADE');
     await dataSource.query('TRUNCATE TABLE exams CASCADE');
+    await dataSource.query('TRUNCATE TABLE classes CASCADE');
+    await dataSource.query('TRUNCATE TABLE class_students CASCADE');
+    await dataSource.query('TRUNCATE TABLE teacher_classes CASCADE');
+    await dataSource.query('TRUNCATE TABLE question_categories CASCADE');
+    await dataSource.query('TRUNCATE TABLE parent_students CASCADE');
+    await dataSource.query('TRUNCATE TABLE transcripts CASCADE');
     await dataSource.query('TRUNCATE TABLE users CASCADE');
   });
 

@@ -77,6 +77,13 @@ export default function AdminTimetablePage() {
   const [scheduleEndTime, setScheduleEndTime] = useState('');
   const [saving, setSaving] = useState(false);
 
+  const minDate = new Date().toISOString().split('T')[0];
+  const isToday = scheduleDate === minDate;
+  const now = new Date();
+  const minTime = isToday
+    ? `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+    : undefined;
+
   useEffect(() => {
     if (selectedClassId) {
       loadTimetable(selectedClassId);
@@ -203,6 +210,7 @@ export default function AdminTimetablePage() {
                   type="date"
                   value={scheduleDate}
                   onChange={(e) => setScheduleDate(e.target.value)}
+                  min={minDate}
                   className="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-green-100"
                   required
                 />
@@ -213,6 +221,7 @@ export default function AdminTimetablePage() {
                   type="time"
                   value={scheduleStartTime}
                   onChange={(e) => setScheduleStartTime(e.target.value)}
+                  min={minTime}
                   className="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-green-100"
                   required
                 />
@@ -223,6 +232,7 @@ export default function AdminTimetablePage() {
                   type="time"
                   value={scheduleEndTime}
                   onChange={(e) => setScheduleEndTime(e.target.value)}
+                  min={minTime}
                   className="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-green-100"
                 />
               </div>

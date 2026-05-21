@@ -1,6 +1,7 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, ManyToMany, JoinTable } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, JoinColumn, ManyToMany, JoinTable } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Class } from '../../classes/entities/class.entity';
+import { Question } from '../../questions/entities/question.entity';
 
 @Entity('exams')
 export class Exam {
@@ -39,6 +40,9 @@ export class Exam {
     inverseJoinColumn: { name: 'classId' },
   })
   targetClasses: Class[];
+
+  @OneToMany(() => Question, question => question.exam)
+  questions: Question[];
 
   @CreateDateColumn()
   createdAt: Date;

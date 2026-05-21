@@ -79,8 +79,8 @@ export class TimetableService {
 
     const allScheduledIds = new Set(classExams.filter(e => e.startTime).map(e => e.id));
     const availableExams = allExams
+      .filter(e => !e.startTime)
       .filter(e => !allScheduledIds.has(e.id))
-      .filter(e => !selectedClass || (classId && !e.targetClasses?.some(c => c.id === classId)) || !classId)
       .filter(e => user?.role !== 'teacher' || e.createdBy?.id === user?.id);
 
     return {
@@ -109,7 +109,6 @@ export class TimetableService {
       .createQueryBuilder('exam')
       .leftJoinAndSelect('exam.targetClasses', 'targetClass')
       .leftJoinAndSelect('exam.createdBy', 'createdBy')
-      .loadRelationCountAndMap('exam.questionCount', 'exam.questions')
       .where('exam.isPublished = :published', { published: true })
       .getMany();
 
@@ -223,6 +222,10 @@ export class TimetableService {
       if (!teacherClass) {
         throw new ForbiddenException('You are not assigned to this class');
       }
+    }
+
+    if (startTime <= new Date()) {
+      throw new BadRequestException('Start time must be in the future');
     }
 
     const alreadyTargets = exam.targetClasses?.some(c => c.id === classId);

@@ -6,18 +6,6 @@ import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { TimetableService } from './timetable.service';
 
-class UpdateScheduleDto {
-  startTime: string | null;
-  endTime: string | null;
-}
-
-class ScheduleExamDto {
-  examId: string;
-  classId: string;
-  startTime: string;
-  endTime: string | null;
-}
-
 @Controller('timetable')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class TimetableController {
@@ -31,12 +19,12 @@ export class TimetableController {
 
   @Post()
   @Roles('super_admin', 'administrator', 'teacher')
-  async scheduleExam(@Body() dto: ScheduleExamDto, @Req() req) {
-    const startTime = new Date(dto.startTime);
-    const endTime = dto.endTime ? new Date(dto.endTime) : null;
+  async scheduleExam(@Body() body: any, @Req() req) {
+    const startTime = new Date(body.startTime);
+    const endTime = body.endTime ? new Date(body.endTime) : null;
     return this.timetableService.scheduleExam(
-      dto.examId,
-      dto.classId,
+      body.examId,
+      body.classId,
       startTime,
       endTime,
       req.user,
@@ -53,11 +41,11 @@ export class TimetableController {
   @Roles('super_admin', 'administrator', 'teacher')
   async updateSchedule(
     @Param('examId') examId: string,
-    @Body() dto: UpdateScheduleDto,
+    @Body() body: any,
     @Req() req,
   ) {
-    const startTime = dto.startTime ? new Date(dto.startTime) : null;
-    const endTime = dto.endTime ? new Date(dto.endTime) : null;
+    const startTime = body.startTime ? new Date(body.startTime) : null;
+    const endTime = body.endTime ? new Date(body.endTime) : null;
     return this.timetableService.updateSchedule(examId, startTime, endTime, req.user);
   }
 }

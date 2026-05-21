@@ -29,6 +29,7 @@ export class TranscriptsController {
   }
 
   @Get(':id')
+  @Roles('super_admin', 'administrator', 'student', 'parent')
   async findOne(@Param('id') id: string, @Req() req) {
     return this.transcriptsService.findOne(id, req.user);
   }

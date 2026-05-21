@@ -1,10 +1,36 @@
 import {
   Controller, Get, Post, Patch, Param, Query, Body, UseGuards, Req,
 } from '@nestjs/common';
+import { IsString, IsOptional, IsDateString } from 'class-validator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { TimetableService } from './timetable.service';
+
+class ScheduleExamDto {
+  @IsString()
+  examId: string;
+
+  @IsString()
+  classId: string;
+
+  @IsDateString()
+  startTime: string;
+
+  @IsOptional()
+  @IsDateString()
+  endTime?: string | null;
+}
+
+class UpdateScheduleDto {
+  @IsOptional()
+  @IsDateString()
+  startTime?: string | null;
+
+  @IsOptional()
+  @IsDateString()
+  endTime?: string | null;
+}
 
 @Controller('timetable')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -19,12 +45,12 @@ export class TimetableController {
 
   @Post()
   @Roles('super_admin', 'administrator', 'teacher')
-  async scheduleExam(@Body() body: any, @Req() req) {
-    const startTime = new Date(body.startTime);
-    const endTime = body.endTime ? new Date(body.endTime) : null;
+  async scheduleExam(@Body() dto: ScheduleExamDto, @Req() req) {
+    const startTime = new Date(dto.startTime);
+    const endTime = dto.endTime ? new Date(dto.endTime) : null;
     return this.timetableService.scheduleExam(
-      body.examId,
-      body.classId,
+      dto.examId,
+      dto.classId,
       startTime,
       endTime,
       req.user,
@@ -41,11 +67,11 @@ export class TimetableController {
   @Roles('super_admin', 'administrator', 'teacher')
   async updateSchedule(
     @Param('examId') examId: string,
-    @Body() body: any,
+    @Body() dto: UpdateScheduleDto,
     @Req() req,
   ) {
-    const startTime = body.startTime ? new Date(body.startTime) : null;
-    const endTime = body.endTime ? new Date(body.endTime) : null;
+    const startTime = dto.startTime ? new Date(dto.startTime) : null;
+    const endTime = dto.endTime ? new Date(dto.endTime) : null;
     return this.timetableService.updateSchedule(examId, startTime, endTime, req.user);
   }
 }

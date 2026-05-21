@@ -8,13 +8,14 @@ import { Class } from '../classes/entities/class.entity';
 import { User } from '../users/entities/user.entity';
 import { TeacherService } from './teacher.service';
 import { TeacherController } from './teacher.controller';
-import { ExamsService } from '../exams/exams.service';
+import { ExamsModule } from '../exams/exams.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Exam, Question, Submission, TeacherClass, Class, User]),
+    ExamsModule,
   ],
-  providers: [TeacherService, ExamsService],
+  providers: [TeacherService],
   controllers: [TeacherController],
   exports: [TeacherService],
 })

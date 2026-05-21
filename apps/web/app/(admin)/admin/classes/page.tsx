@@ -49,7 +49,7 @@ export default function AdminClassesPage() {
   const router = useRouter();
 
   const refreshData = () => {
-    Promise.all([
+    return Promise.all([
       api.get('/classes').catch(() => ({ data: [] })),
       api.get('/users?role=student').catch(() => ({ data: [] })),
       api.get('/users?role=teacher').catch(() => ({ data: [] })),
@@ -61,8 +61,7 @@ export default function AdminClassesPage() {
   };
 
   useEffect(() => {
-    refreshData();
-    setLoading(false);
+    refreshData().then(() => setLoading(false));
   }, []);
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -498,7 +497,7 @@ export default function AdminClassesPage() {
       />
 
       <footer className="max-w-7xl mx-auto px-8 py-12 text-center border-t border-slate-100">
-        <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.5em]">Institutional Structural Matrix v4.2.0 © 2024</p>
+        <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.5em]">Institutional Structural Matrix v4.2.0 © {new Date().getFullYear()}</p>
       </footer>
     </div>
   );

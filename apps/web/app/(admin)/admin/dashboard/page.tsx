@@ -286,7 +286,7 @@ export default function AdminDashboard() {
       </main>
       
       <footer className="max-w-7xl mx-auto px-8 py-12 text-center">
-        <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.5em]">Institutional Command Matrix v4.2.0 © 2024</p>
+        <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.5em]">Institutional Command Matrix v4.2.0 © {new Date().getFullYear()}</p>
       </footer>
     </div>
   );

@@ -19,6 +19,7 @@ import { ParentsModule } from './parents/parents.module';
 import { TranscriptsModule } from './transcripts/transcripts.module';
 import { GatewayModule } from './gateway/gateway.module';
 import { TeacherModule } from './teacher/teacher.module';
+import { TimetableModule } from './timetable/timetable.module';
 import { RequestLoggerMiddleware } from './common/middleware/request-logger.middleware';
 import { HealthController } from './health.controller';
 
@@ -80,6 +81,7 @@ import { HealthController } from './health.controller';
     TranscriptsModule,
     GatewayModule,
     TeacherModule,
+    TimetableModule,
   ],
   controllers: [AppController, HealthController],
   providers: [

@@ -192,6 +192,14 @@ export default function AdminDashboard() {
                   icon: "📜", 
                   color: "border-rose-500", 
                   iconBg: "bg-rose-50 text-rose-600" 
+                },
+                { 
+                  href: "/admin/timetable", 
+                  title: "Schedule Matrix", 
+                  desc: "Manage exam dates, times, and institutional timetable.", 
+                  icon: "📅", 
+                  color: "border-cyan-500", 
+                  iconBg: "bg-cyan-50 text-cyan-600" 
                 }
               ].map((link, i) => (
                 <Link key={i} href={link.href} className="premium-card group hover:translate-y-[-6px]">

@@ -153,12 +153,15 @@ export default function DashboardPage() {
                   <span className="font-black text-slate-300 font-mono">0x4F...7E2</span>
                 </div>
               </div>
-               <Link href="/results" className="mt-8 block w-full py-4 border-2 border-slate-100 text-slate-600 text-center rounded-xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-50 transition-all">
-                 View Past Results
-               </Link>
-               <Link href="/transcripts" className="mt-4 block w-full py-4 border-2 border-slate-100 text-slate-600 text-center rounded-xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-50 transition-all">
-                 View Transcripts
-               </Link>
+               <Link href="/timetable" className="mt-8 block w-full py-4 border-2 border-blue-100 bg-blue-50/50 text-blue-600 text-center rounded-xl font-black uppercase tracking-widest text-[10px] hover:bg-blue-50 transition-all">
+                  📅 Exam Schedule
+                </Link>
+               <Link href="/results" className="mt-4 block w-full py-4 border-2 border-slate-100 text-slate-600 text-center rounded-xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-50 transition-all">
+                  View Past Results
+                </Link>
+                <Link href="/transcripts" className="mt-4 block w-full py-4 border-2 border-slate-100 text-slate-600 text-center rounded-xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-50 transition-all">
+                  View Transcripts
+                </Link>
             </div>
           </div>
         </div>

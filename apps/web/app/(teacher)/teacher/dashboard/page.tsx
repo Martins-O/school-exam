@@ -218,6 +218,9 @@ export default function TeacherDashboard() {
                   </div>
                 ))
               )}
+              <Link href="/teacher/timetable" className="mt-4 block w-full py-4 bg-cyan-50 text-cyan-700 text-center rounded-xl font-black uppercase tracking-widest text-[10px] hover:bg-cyan-100 transition-all border border-cyan-200">
+                📅 Exam Timetable
+              </Link>
             </div>
           </div>
         </div>

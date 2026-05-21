@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, IsNull, Not } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Transcript } from '../transcripts/entities/transcript.entity';
 import { Submission } from '../submissions/entities/submission.entity';
 import { User } from '../users/entities/user.entity';
@@ -90,25 +90,5 @@ export class TranscriptAutoUpdateService {
     transcript.averageScore = transcript.results.length > 0 ? totalPercentage / transcript.results.length : 0;
 
     await this.transcriptRepo.save(transcript);
-  }
-
-  /**
-   * Get all active transcripts for a student
-   */
-  async getActiveTranscripts(studentId: string): Promise<Transcript[]> {
-    return this.transcriptRepo.find({
-      where: { studentId, isFinalized: false },
-      order: { createdAt: 'DESC' },
-    });
-  }
-
-  /**
-   * Get all finalized transcripts for a student
-   */
-  async getFinalizedTranscripts(studentId: string): Promise<Transcript[]> {
-    return this.transcriptRepo.find({
-      where: { studentId, isFinalized: true },
-      order: { createdAt: 'DESC' },
-    });
   }
 }

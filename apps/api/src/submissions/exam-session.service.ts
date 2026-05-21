@@ -1,6 +1,6 @@
 import { Injectable, ForbiddenException, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, QueryRunner, In } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Submission } from './entities/submission.entity';
 import { Exam } from '../exams/entities/exam.entity';
 import { Question } from '../questions/entities/question.entity';
@@ -39,112 +39,108 @@ export class ExamSessionService {
   }
 
   async startExam(examId: string, student: User): Promise<any> {
-    const exam = await this.examRepo.findOne({ where: { id: examId } });
-    if (!exam) {
-      throw new NotFoundException('Exam not found');
-    }
+    const queryRunner = this.submissionRepo.manager.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    if (!exam.isPublished) {
-      throw new ForbiddenException('Exam is not published');
-    }
+    try {
+      const exam = await queryRunner.manager.findOne(Exam, { where: { id: examId } });
+      if (!exam) {
+        throw new NotFoundException('Exam not found');
+      }
 
-    const now = new Date();
-    if (exam.startTime && exam.startTime > now) {
-      throw new ForbiddenException('Exam is not available yet');
-    }
-    if (exam.endTime && exam.endTime < now) {
-      throw new ForbiddenException('Exam has ended');
-    }
+      if (!exam.isPublished) {
+        throw new ForbiddenException('Exam is not published');
+      }
 
-    // Verify student is in exam's target class (if exam has target classes)
-    const studentClasses = await this.classStudentRepo.find({
-      where: { studentId: student.id },
-      relations: ['class'],
-    });
-    const studentClassIds = new Set(studentClasses.map(sc => sc.classId));
+      const now = new Date();
+      if (exam.startTime && exam.startTime > now) {
+        throw new ForbiddenException('Exam is not available yet');
+      }
+      if (exam.endTime && exam.endTime < now) {
+        throw new ForbiddenException('Exam has ended');
+      }
 
-    if (studentClassIds.size > 0) {
-      const examWithClasses = await this.examRepo.findOne({
-        where: { id: examId },
-        relations: ['targetClasses'],
+      // Verify student is in exam's target class (if exam has target classes)
+      const studentClasses = await queryRunner.manager.find(ClassStudent, {
+        where: { studentId: student.id },
+        relations: ['class'],
       });
+      const studentClassIds = new Set(studentClasses.map(sc => sc.classId));
 
-      if (examWithClasses && examWithClasses.targetClasses && examWithClasses.targetClasses.length > 0) {
-        const examClassIds = examWithClasses.targetClasses.map(tc => tc.id);
-        const isEnrolled = examClassIds.some(id => studentClassIds.has(id));
-        
-        if (!isEnrolled) {
-          throw new ForbiddenException('You are not enrolled in any class assigned to this exam');
+      if (studentClassIds.size > 0) {
+        const examWithClasses = await queryRunner.manager.findOne(Exam, {
+          where: { id: examId },
+          relations: ['targetClasses'],
+        });
+
+        if (examWithClasses?.targetClasses?.length > 0) {
+          const examClassIds = examWithClasses.targetClasses.map(tc => tc.id);
+          if (!examClassIds.some(id => studentClassIds.has(id))) {
+            throw new ForbiddenException('You are not enrolled in any class assigned to this exam');
+          }
         }
       }
-    }
 
-    const existing = await this.submissionRepo.findOne({
-      where: {
-        student: { id: student.id },
-        exam: { id: examId },
-        status: 'in_progress',
-      },
-    });
+      // Check for existing in_progress submission (re-entry path)
+      const existing = await queryRunner.manager.findOne(Submission, {
+        where: { student: { id: student.id }, exam: { id: examId }, status: 'in_progress' as any },
+        relations: ['student', 'exam'],
+      });
 
-    if (existing) {
+      if (existing) {
+        const questions = await this.questionRepo.find({
+          where: { exam: { id: examId } },
+          select: ['id', 'questionText', 'options', 'marks', 'type', 'maxWordCount', 'passageText'],
+        });
+
+        const questionMap = new Map(questions.map(q => [q.id, q]));
+        const orderedQuestions = existing.questionOrder
+          .map((id: string) => questionMap.get(id))
+          .filter(q => q !== undefined);
+
+        await queryRunner.commitTransaction();
+        return {
+          submissionId: existing.id,
+          examTitle: exam.title,
+          durationMinutes: exam.durationMinutes,
+          startedAt: existing.startedAt.toISOString(),
+          remainingSeconds: this.getRemainingSeconds(existing, exam),
+          questions: orderedQuestions.map(q => ({
+            id: q.id,
+            questionText: q.questionText,
+            options: q.options,
+            marks: q.marks,
+            type: q.type,
+            maxWordCount: q.maxWordCount,
+            passageText: q.passageText,
+          })),
+          maxViolations: exam.maxViolations,
+          answers: existing.answers,
+          flaggedQuestions: existing.flaggedQuestions,
+        };
+      }
+
+      // Check for completed submissions
+      const activeSubmission = await queryRunner.manager.findOne(Submission, {
+        where: [
+          { student: { id: student.id }, exam: { id: examId }, status: 'submitted' as any },
+          { student: { id: student.id }, exam: { id: examId }, status: 'timed_out' as any },
+          { student: { id: student.id }, exam: { id: examId }, status: 'force_submitted' as any },
+        ],
+      });
+
+      if (activeSubmission) {
+        throw new ConflictException('Exam already started');
+      }
+
       const questions = await this.questionRepo.find({
         where: { exam: { id: examId } },
         select: ['id', 'questionText', 'options', 'marks', 'type', 'maxWordCount', 'passageText'],
       });
 
-      const questionMap = new Map(questions.map(q => [q.id, q]));
-      const orderedQuestions = existing.questionOrder
-        .map(id => questionMap.get(id))
-        .filter(q => q !== undefined);
+      const questionOrder = this.randomizerService.shuffleQuestions(questions);
 
-      return {
-        submissionId: existing.id,
-        examTitle: exam.title,
-        durationMinutes: exam.durationMinutes,
-        startedAt: existing.startedAt.toISOString(),
-        remainingSeconds: this.getRemainingSeconds(existing, exam),
-        questions: orderedQuestions.map(q => ({
-          id: q.id,
-          questionText: q.questionText,
-          options: q.options,
-          marks: q.marks,
-          type: q.type,
-          maxWordCount: q.maxWordCount,
-          passageText: q.passageText,
-        })),
-        maxViolations: exam.maxViolations,
-      };
-    }
-
-    const activeSubmission = await this.submissionRepo.findOne({
-      where: [
-        { student: { id: student.id }, exam: { id: examId }, status: 'submitted' },
-        { student: { id: student.id }, exam: { id: examId }, status: 'timed_out' },
-        { student: { id: student.id }, exam: { id: examId }, status: 'force_submitted' },
-      ],
-    });
-
-    if (activeSubmission) {
-      throw new ConflictException({
-        message: 'Exam already started',
-        submissionId: activeSubmission.id,
-      });
-    }
-
-    const questions = await this.questionRepo.find({
-      where: { exam: { id: examId } },
-      select: ['id', 'questionText', 'options', 'marks', 'type', 'maxWordCount', 'passageText'],
-    });
-
-    const questionOrder = this.randomizerService.shuffleQuestions(questions);
-
-    const queryRunner =
-      this.submissionRepo.manager.connection.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
-    try {
       const submission = new Submission();
       submission.student = student as any;
       submission.exam = exam as any;
@@ -157,7 +153,6 @@ export class ExamSessionService {
       submission.autoSubmitted = false;
 
       const saved = await queryRunner.manager.save(submission);
-
       await queryRunner.commitTransaction();
 
       return {
@@ -202,10 +197,7 @@ export class ExamSessionService {
     }
 
     if (submission.status !== 'in_progress') {
-      throw new ConflictException({
-        message: 'Exam already closed',
-        status: submission.status,
-      });
+      throw new ConflictException('Exam already closed');
     }
 
     const remainingSeconds = this.getRemainingSeconds(
@@ -256,10 +248,7 @@ export class ExamSessionService {
     }
 
     if (submission.status !== 'in_progress') {
-      throw new ConflictException({
-        message: 'Exam already closed',
-        status: submission.status,
-      });
+      throw new ConflictException('Exam already closed');
     }
 
     submission.answers = { ...submission.answers, ...dto.answers };
@@ -417,10 +406,7 @@ export class ExamSessionService {
     }
 
     if (submission.status !== 'in_progress') {
-      throw new ConflictException({
-        message: 'Exam already closed',
-        status: submission.status,
-      });
+      throw new ConflictException('Exam already closed');
     }
 
     submission.violations += 1;

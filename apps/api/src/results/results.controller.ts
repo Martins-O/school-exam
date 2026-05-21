@@ -38,6 +38,7 @@ export class AdminResultsController {
   }
 
   @Get('exam/:examId')
+  @Roles('super_admin', 'administrator', 'teacher')
   async getResultsByExam(@Param('examId') examId: string, @Req() req) {
     return this.resultsService.getResultsByExam(examId, req.user);
   }

@@ -9,6 +9,7 @@ export class Question {
   id: string;
 
   @ManyToOne(() => Exam, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'examId' })
   exam: Exam;
 
   @Column({ type: 'text' })

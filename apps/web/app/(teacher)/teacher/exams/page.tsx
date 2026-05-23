@@ -6,6 +6,8 @@ import api from '@/lib/api';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 import TeacherHeader from '@/components/teacher/TeacherHeader';
+import TiptapEditor from '@/components/exam/TiptapEditor';
+import MathRenderer from '@/components/exam/MathRenderer';
 
 interface Exam {
   id: string;
@@ -547,38 +549,41 @@ Marks: 2`}</pre>
                             Remove
                           </button>
                         </div>
-                        <input
-                          type="text"
+                        <TiptapEditor
                           value={q.questionText}
-                          onChange={(e) => updateQuestion(i, 'questionText', e.target.value)}
-                          className="w-full bg-white border-2 border-slate-100 rounded-xl px-5 py-3 text-sm font-bold text-slate-800 focus:outline-none focus:ring-4 focus:ring-green-100 focus:border-brand-green/40 transition-all mb-4"
+                          onChange={(html) => updateQuestion(i, 'questionText', html)}
                           placeholder="Enter question text"
+                          minHeight={80}
+                          mode="full"
                         />
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                           {['A', 'B', 'C', 'D'].map((letter) => (
-                            <div key={letter} className="flex items-center gap-3">
-                              <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black ${
-                                q.correctAnswer === letter
-                                  ? 'bg-brand-green text-white'
-                                  : 'bg-slate-200 text-slate-500'
-                              }`}>
-                                {letter}
-                              </span>
-                              <input
-                                type="text"
+                            <div key={letter} className="border-2 border-slate-100 rounded-xl p-3 bg-white">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className={`w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-black ${
+                                  q.correctAnswer === letter
+                                    ? 'bg-brand-green text-white'
+                                    : 'bg-slate-200 text-slate-500'
+                                }`}>
+                                  {letter}
+                                </span>
+                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Option {letter}</span>
+                                <input
+                                  type="radio"
+                                  name={`correct-${i}`}
+                                  value={letter}
+                                  checked={q.correctAnswer === letter}
+                                  onChange={() => updateQuestion(i, 'correctAnswer', letter)}
+                                  className="ml-auto w-4 h-4 text-brand-green focus:ring-brand-green"
+                                  title="Mark as correct"
+                                />
+                              </div>
+                              <TiptapEditor
                                 value={(q as any)[`option${letter}`]}
-                                onChange={(e) => updateQuestion(i, `option${letter}` as any, e.target.value)}
-                                className="flex-1 bg-white border-2 border-slate-100 rounded-lg px-4 py-2.5 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-green-100 focus:border-brand-green/40 transition-all"
-                                placeholder={`Option ${letter}`}
-                              />
-                              <input
-                                type="radio"
-                                name={`correct-${i}`}
-                                value={letter}
-                                checked={q.correctAnswer === letter}
-                                onChange={() => updateQuestion(i, 'correctAnswer', letter)}
-                                className="w-4 h-4 text-brand-green focus:ring-brand-green"
-                                title="Mark as correct"
+                                onChange={(html) => updateQuestion(i, `option${letter}` as any, html)}
+                                placeholder={`Option ${letter}...`}
+                                minHeight={60}
+                                mode="minimal"
                               />
                             </div>
                           ))}

@@ -360,12 +360,12 @@ export default function TeacherExamsPage() {
                   </div>
                   <div>
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Description (Optional)</label>
-                    <textarea
+                    <TiptapEditor
                       value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      rows={2}
-                      className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-6 py-4 text-slate-800 font-bold focus:outline-none focus:ring-4 focus:ring-green-100 focus:border-brand-green/40 transition-all resize-none"
+                      onChange={setDescription}
                       placeholder="Instructions or notes..."
+                      minHeight={80}
+                      mode="minimal"
                     />
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -660,9 +660,9 @@ Marks: 2`}</pre>
                     <span className="text-sm font-black text-slate-800">{title}</span>
                   </div>
                   {description && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Description</span>
-                      <span className="text-xs font-bold text-slate-600 max-w-xs text-right">{description}</span>
+                    <div className="flex justify-between items-start">
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest shrink-0 mt-0.5">Description</span>
+                      <div className="text-xs font-bold text-slate-600 max-w-xs text-right"><MathRenderer content={description} /></div>
                     </div>
                   )}
                   <div className="flex justify-between items-center">

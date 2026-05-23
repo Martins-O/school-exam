@@ -8,6 +8,7 @@ import Link from 'next/link';
 import AdminHeader from '@/components/admin/AdminHeader';
 import PortalModal from '@/components/admin/PortalModal';
 import PortalSpinner from '@/components/ui/PortalSpinner';
+import TiptapEditor from '@/components/exam/TiptapEditor';
 
 interface Exam {
   id: string;
@@ -28,6 +29,7 @@ export default function AdminExamsPage() {
   });
   
   const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
   const [duration, setDuration] = useState(60);
   const router = useRouter();
 
@@ -49,9 +51,10 @@ export default function AdminExamsPage() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await api.post('/exams', { title, durationMinutes: duration });
+      await api.post('/exams', { title, description, durationMinutes: duration });
       toast.success('Exam entry initialized');
       setTitle('');
+      setDescription('');
       setDuration(60);
       setShowCreate(false);
       loadExams();
@@ -131,6 +134,16 @@ export default function AdminExamsPage() {
                   min={1}
                 />
                 <label>Session Duration (Minutes)</label>
+              </div>
+              <div className="md:col-span-3">
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Description (Optional)</label>
+                <TiptapEditor
+                  value={description}
+                  onChange={setDescription}
+                  placeholder="Instructions or notes..."
+                  minHeight={100}
+                  mode="minimal"
+                />
               </div>
               <div className="md:col-span-3 pt-6 flex justify-end">
                 <button

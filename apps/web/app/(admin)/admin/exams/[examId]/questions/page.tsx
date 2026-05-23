@@ -6,6 +6,8 @@ import api from '@/lib/api';
 import toast from 'react-hot-toast';
 import AdminHeader from '@/components/admin/AdminHeader';
 import PortalModal from '@/components/admin/PortalModal';
+import TiptapEditor from '@/components/exam/TiptapEditor';
+import MathRenderer from '@/components/exam/MathRenderer';
 
 interface Question {
   id: string;
@@ -37,6 +39,8 @@ export default function AdminQuestionsPage() {
   const [marks, setMarks] = useState(1);
   const [maxWordCount, setMaxWordCount] = useState<number | ''>('');
   const [passageText, setPassageText] = useState('');
+  const [batchQuestions, setBatchQuestions] = useState<any[]>([]);
+  const [batchSubmitting, setBatchSubmitting] = useState(false);
   
   const pdfFileRef = useRef<HTMLInputElement>(null);
   const csvFileRef = useRef<HTMLInputElement>(null);
@@ -66,20 +70,7 @@ export default function AdminQuestionsPage() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const payload: any = {
-        questionText,
-        type: questionType,
-        marks,
-      };
-
-      if (questionType === 'objective') {
-        payload.options = options;
-        payload.correctAnswer = correctAnswer;
-      } else {
-        if (maxWordCount) payload.maxWordCount = Number(maxWordCount);
-        if (passageText) payload.passageText = passageText;
-      }
-
+      const payload = buildQuestionPayload();
       await api.post(`/exams/${examId}/questions`, payload);
       toast.success('Question added to database');
       setShowCreate(false);
@@ -102,6 +93,56 @@ export default function AdminQuestionsPage() {
     setCsvExtracted(null);
     setPdfFile(null);
     setCsvFile(null);
+  };
+
+  const buildQuestionPayload = () => {
+    const payload: any = {
+      questionText,
+      type: questionType,
+      marks,
+    };
+    if (questionType === 'objective') {
+      payload.options = options;
+      payload.correctAnswer = correctAnswer;
+    } else {
+      if (maxWordCount) payload.maxWordCount = Number(maxWordCount);
+      if (passageText) payload.passageText = passageText;
+    }
+    return payload;
+  };
+
+  const addToBatch = () => {
+    const payload = buildQuestionPayload();
+    setBatchQuestions([...batchQuestions, payload]);
+    resetForm();
+    toast.success('Question added to batch queue');
+  };
+
+  const removeFromBatch = (idx: number) => {
+    setBatchQuestions(batchQuestions.filter((_, i) => i !== idx));
+  };
+
+  const handleBatchSubmit = async () => {
+    if (!batchQuestions.length) return;
+    setBatchSubmitting(true);
+    try {
+      const res = await api.post(`/exams/${examId}/questions/bulk-import`, { questions: batchQuestions });
+      const data = res.data;
+      const successCount = data.success?.length || 0;
+      const failCount = data.failed?.length || 0;
+      if (failCount > 0) {
+        toast.error(`${failCount} question(s) failed — see console for details`);
+        console.error('Batch import errors:', data.errors);
+      }
+      toast.success(`Batch injected ${successCount} question(s) successfully`);
+      setBatchQuestions([]);
+      setShowCreate(false);
+      loadQuestions();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Batch injection failed');
+    } finally {
+      setBatchSubmitting(false);
+    }
   };
 
   const handlePdfUpload = async () => {
@@ -146,7 +187,7 @@ export default function AdminQuestionsPage() {
     if (!pdfExtracted?.length) return;
     setUploading(true);
     try {
-      for (const q of pdfExtracted) {
+      const questions = pdfExtracted.map((q) => {
         const payload: any = {
           questionText: q.questionText,
           type: q.type,
@@ -158,9 +199,11 @@ export default function AdminQuestionsPage() {
         }
         if (q.passageText) payload.passageText = q.passageText;
         if (q.maxWordCount) payload.maxWordCount = q.maxWordCount;
-        await api.post(`/exams/${examId}/questions`, payload);
-      }
-      toast.success(`Imported ${pdfExtracted.length} questions`);
+        return payload;
+      });
+      const res = await api.post(`/exams/${examId}/questions/bulk-import`, { questions });
+      const successCount = res.data.success?.length || 0;
+      toast.success(`Imported ${successCount} question(s) from PDF`);
       setPdfExtracted(null);
       loadQuestions();
     } catch (err: any) {
@@ -208,7 +251,7 @@ export default function AdminQuestionsPage() {
               {showImport ? 'Close Protocol' : 'Import Protocol'}
             </button>
             <button 
-              onClick={() => { setShowCreate(!showCreate); setShowImport(false); resetForm(); }}
+              onClick={() => { setShowCreate(!showCreate); setShowImport(false); resetForm(); setBatchQuestions([]); }}
               className={`px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 shadow-xl ${
                 showCreate ? 'bg-red-600 text-white ring-4 ring-red-100' : 'bg-white text-brand-green hover:bg-slate-50'
               }`}
@@ -290,34 +333,32 @@ export default function AdminQuestionsPage() {
               </section>
 
               <section className="space-y-8">
-                <div className="floating-label-group">
-                  <textarea
+                <div>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Examination Question Prompt</label>
+                  <TiptapEditor
                     value={questionText}
-                    onChange={(e) => setQuestionText(e.target.value)}
-                    className="institutional-input min-h-[160px] pt-10"
-                    placeholder=" "
-                    required
+                    onChange={setQuestionText}
+                    placeholder="Type or paste question text here..."
+                    minHeight={160}
+                    mode="full"
                   />
-                  <label>Examination Question Prompt</label>
-                  <div className="absolute right-6 top-6">
-                    <svg className="w-5 h-5 text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                  </div>
                 </div>
 
                 {questionType === 'objective' && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in slide-in-from-left-4 duration-500">
                     {Object.entries(options).map(([key, val]) => (
-                      <div key={key} className="floating-label-group">
-                        <input
-                          type="text"
+                      <div key={key}>
+                        <div className="flex items-center gap-3 mb-2">
+                          <span className="w-8 h-8 bg-white border-2 border-slate-100 rounded-lg flex items-center justify-center font-black text-[10px] text-slate-400 shadow-sm">{key}</span>
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Option {key}</span>
+                        </div>
+                        <TiptapEditor
                           value={val}
-                          onChange={(e) => setOptions({ ...options, [key]: e.target.value })}
-                          className="institutional-input pt-10"
-                          placeholder=" "
-                          required
+                          onChange={(html) => setOptions({ ...options, [key]: html })}
+                          placeholder={`Option ${key} content...`}
+                          minHeight={60}
+                          mode="minimal"
                         />
-                        <label>Option {key} Content</label>
-                        <span className="absolute left-[-12px] top-1/2 -translate-y-1/2 w-8 h-8 bg-white border-2 border-slate-100 rounded-lg flex items-center justify-center font-black text-[10px] text-slate-400 shadow-sm">{key}</span>
                       </div>
                     ))}
                   </div>
@@ -373,24 +414,98 @@ export default function AdminQuestionsPage() {
               </section>
 
               {questionType === 'theory' && (
-                <div className="floating-label-group animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <textarea
+                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Reference Passage / Background Context (Optional)</label>
+                  <TiptapEditor
                     value={passageText}
-                    onChange={(e) => setPassageText(e.target.value)}
-                    className="institutional-input min-h-[120px] pt-10 italic text-slate-600"
-                    placeholder=" "
+                    onChange={setPassageText}
+                    placeholder="Type or paste reference passage here..."
+                    minHeight={120}
+                    mode="full"
                   />
-                  <label>Reference Passage / Background Context (Optional)</label>
                 </div>
               )}
 
-              <div className="pt-8 border-t border-slate-100 flex justify-end">
+              {/* Batch Queue */}
+              {batchQuestions.length > 0 && (
+                <div className="border-t border-slate-100 pt-8">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-sm font-black text-slate-700 uppercase tracking-widest flex items-center gap-3">
+                      <span className="w-6 h-6 bg-brand-gold rounded-lg flex items-center justify-center text-brand-green text-[10px] font-black">{batchQuestions.length}</span>
+                      Pending Questions in Batch Queue
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={() => setBatchQuestions([])}
+                      className="text-[10px] font-black text-red-400 hover:text-red-600 uppercase tracking-widest transition-colors"
+                    >
+                      Clear Queue
+                    </button>
+                  </div>
+                  <div className="max-h-[300px] overflow-y-auto space-y-3 pr-2 custom-scrollbar">
+                    {batchQuestions.map((q, idx) => (
+                      <div key={idx} className="flex items-start gap-4 bg-slate-50 border border-slate-100 rounded-xl p-4 group">
+                        <span className="w-7 h-7 bg-slate-200 rounded-lg flex items-center justify-center text-[10px] font-black text-slate-500 shrink-0">{idx + 1}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-3 mb-1">
+                            <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest ${q.type === 'theory' ? 'bg-indigo-100 text-indigo-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                              {q.type}
+                            </span>
+                            <span className="text-[9px] font-black text-slate-300">{q.marks} PTS</span>
+                          </div>
+                          <p className="text-xs font-bold text-slate-600 truncate">{q.questionText}</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeFromBatch(idx)}
+                          className="w-7 h-7 bg-white rounded-lg flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all shrink-0 opacity-0 group-hover:opacity-100"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="pt-8 border-t border-slate-100 flex items-center justify-between gap-4">
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={addToBatch}
+                    disabled={!questionText.trim()}
+                    className="px-8 py-5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-black rounded-2xl transition-all active:scale-95 uppercase text-[10px] tracking-[0.2em] flex items-center gap-3 disabled:opacity-40 disabled:pointer-events-none"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 4v16m8-8H4" /></svg>
+                    Add to Queue
+                  </button>
+                  {batchQuestions.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleBatchSubmit}
+                      disabled={batchSubmitting}
+                      className="px-8 py-5 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-2xl transition-all shadow-2xl shadow-indigo-900/20 active:scale-95 uppercase text-[10px] tracking-[0.2em] flex items-center gap-3 disabled:opacity-40 disabled:pointer-events-none"
+                    >
+                      {batchSubmitting ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          Injecting...
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                          Batch Inject {batchQuestions.length}
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
                 <button
                   type="submit"
-                  className="px-16 py-5 bg-brand-green hover:bg-green-800 text-white font-black rounded-2xl transition-all shadow-2xl shadow-green-900/20 active:scale-95 uppercase text-xs tracking-[0.3em] flex items-center gap-3"
+                  className="px-12 py-5 bg-brand-green hover:bg-green-800 text-white font-black rounded-2xl transition-all shadow-2xl shadow-green-900/20 active:scale-95 uppercase text-xs tracking-[0.3em] flex items-center gap-3"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
-                  Inject into Question Bank
+                  Inject Single
                 </button>
               </div>
             </form>
@@ -530,7 +645,7 @@ export default function AdminQuestionsPage() {
                         )}
                       </div>
                       <h3 className="text-2xl font-black text-slate-800 mb-10 max-w-4xl leading-[1.4] uppercase tracking-tight">
-                        {q.questionText}
+                        <MathRenderer content={q.questionText} />
                       </h3>
                       
                       {q.passageText && (
@@ -539,7 +654,7 @@ export default function AdminQuestionsPage() {
                             <svg className="w-24 h-24" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.154c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" /></svg>
                           </div>
                           <p className="text-[10px] text-brand-green font-black uppercase tracking-[0.3em] mb-3">Contextual Reference:</p>
-                          <p className="text-sm text-slate-500 leading-relaxed italic relative z-10">{q.passageText}</p>
+                          <div className="text-sm text-slate-500 leading-relaxed italic relative z-10"><MathRenderer content={q.passageText} /></div>
                         </div>
                       )}
 
@@ -550,7 +665,7 @@ export default function AdminQuestionsPage() {
                               <span className={`w-10 h-10 flex items-center justify-center rounded-xl border-2 font-black text-xs transition-all duration-500 ${q.correctAnswer === key ? 'border-emerald-500 bg-emerald-600 text-white shadow-lg shadow-emerald-900/20 rotate-[360deg]' : 'border-slate-100 bg-slate-50 text-slate-300'}`}>
                                 {key}
                               </span>
-                              <span className={`text-[11px] font-black uppercase tracking-widest transition-colors ${q.correctAnswer === key ? 'text-emerald-700' : 'text-slate-400 group-hover/opt:text-slate-600'}`}>{val}</span>
+                              <span className={`text-[11px] font-black uppercase tracking-widest transition-colors ${q.correctAnswer === key ? 'text-emerald-700' : 'text-slate-400 group-hover/opt:text-slate-600'}`}><MathRenderer content={val} /></span>
                             </div>
                           ))}
                         </div>

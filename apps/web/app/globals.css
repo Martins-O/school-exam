@@ -168,3 +168,109 @@
     @apply px-6 py-4 align-middle text-sm text-slate-700;
   }
 }
+
+/* TipTap Editor Styles */
+.ProseMirror {
+  outline: none;
+  padding: 1rem 1.25rem;
+  min-height: inherit;
+  line-height: 1.8;
+}
+
+.ProseMirror p {
+  margin: 0.5em 0;
+}
+
+.ProseMirror h1 {
+  font-size: 1.5em;
+  font-weight: 800;
+  margin: 1em 0 0.5em;
+}
+
+.ProseMirror h2 {
+  font-size: 1.25em;
+  font-weight: 700;
+  margin: 1em 0 0.5em;
+}
+
+.ProseMirror h3 {
+  font-size: 1.1em;
+  font-weight: 600;
+  margin: 0.8em 0 0.4em;
+}
+
+.ProseMirror ul,
+.ProseMirror ol {
+  padding-left: 1.5em;
+  margin: 0.5em 0;
+}
+
+.ProseMirror li {
+  margin: 0.25em 0;
+}
+
+.ProseMirror ul li {
+  list-style-type: disc;
+}
+
+.ProseMirror ol li {
+  list-style-type: decimal;
+}
+
+.ProseMirror [style*="text-align: center"] {
+  text-align: center;
+}
+
+.ProseMirror [style*="text-align: right"] {
+  text-align: right;
+}
+
+/* KaTeX math rendering in TipTap */
+.ProseMirror .math {
+  color: #0F5132;
+  font-size: 1.1em;
+}
+
+.ProseMirror .math-display {
+  display: block;
+  text-align: center;
+  margin: 1em 0;
+  padding: 0.5em;
+  background: rgba(15, 81, 50, 0.03);
+  border-radius: 8px;
+}
+
+/* Read-only math content rendering */
+.math-content {
+  line-height: 1.8;
+  display: inline;
+}
+
+.math-content .katex-display {
+  margin: 0.5em 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.math-content p {
+  margin: 0.25em 0;
+}
+
+/* Math error state */
+.math-error {
+  color: #dc2626;
+  font-size: 0.875em;
+  padding: 0.25em 0.5em;
+  background: #fef2f2;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+/* TipTap placeholder */
+.ProseMirror p.is-editor-empty:first-child::before {
+  color: #94a3b8;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}

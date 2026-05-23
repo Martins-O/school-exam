@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import AdminHeader from '@/components/admin/AdminHeader';
 import PortalModal from '@/components/admin/PortalModal';
 import PortalSpinner from '@/components/ui/PortalSpinner';
+import MathRenderer from '@/components/exam/MathRenderer';
 
 interface PendingSubmission {
   submissionId: string;
@@ -157,7 +158,7 @@ export default function GradingDashboardPage() {
                 <div className="bg-slate-50/80 px-10 py-6 flex items-center justify-between">
                   <div className="flex items-center gap-5">
                     <span className="w-10 h-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center font-black text-sm shadow-lg shadow-indigo-600/20">{idx + 1}</span>
-                    <h3 className="font-black text-slate-800 uppercase tracking-tight text-sm">{q.questionText}</h3>
+                    <h3 className="font-black text-slate-800 uppercase tracking-tight text-sm"><MathRenderer content={q.questionText} /></h3>
                   </div>
                   {q.currentScore !== null && q.currentScore > 0 && (
                     <span className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-lg text-[9px] font-black uppercase tracking-widest">

@@ -1,6 +1,7 @@
 'use client';
 
 import RichTextEditor from './RichTextEditor';
+import MathRenderer from './MathRenderer';
 
 interface QuestionCardProps {
   question: {
@@ -28,7 +29,7 @@ export default function QuestionCard({
       {question.passageText && (
         <div className="mb-8 p-6 bg-amber-50 border-2 border-amber-200 rounded-2xl">
           <p className="text-sm font-bold text-amber-700 uppercase tracking-widest mb-3">Passage / Reading Material</p>
-          <p className="text-lg leading-relaxed text-slate-700 whitespace-pre-wrap">{question.passageText}</p>
+          <p className="text-lg leading-relaxed text-slate-700 whitespace-pre-wrap"><MathRenderer content={question.passageText} /></p>
         </div>
       )}
 
@@ -44,7 +45,7 @@ export default function QuestionCard({
           <span className="text-xs font-bold text-slate-400">({question.marks} marks)</span>
         </div>
         <h2 className="text-2xl md:text-4xl font-extrabold leading-[1.3] text-slate-800 tracking-tight">
-          {question.questionText}
+          <MathRenderer content={question.questionText} />
         </h2>
       </div>
 
@@ -77,7 +78,7 @@ export default function QuestionCard({
                 {key}
               </div>
               <span className={`font-bold text-lg md:text-xl ${selected === key ? 'text-brand-green' : 'text-slate-700'}`}>
-                {value}
+                <MathRenderer content={value} />
               </span>
             </button>
           ))}

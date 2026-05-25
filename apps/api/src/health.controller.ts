@@ -23,11 +23,13 @@ export class HealthController {
         'SELECT column_name, data_type, table_schema FROM information_schema.columns WHERE table_name = $1 ORDER BY table_schema, ordinal_position',
         ['users'],
       );
-      columns = colResult.map((r: any) => `${r.table_schema}.${r.column_name}`);
       const migrationsResult = await this.dataSource.query(
         'SELECT name FROM "migrations" ORDER BY name'
       );
-      columns = { users: colResult.map((r: any) => `${r.table_schema}.${r.column_name}`), migrations: migrationsResult.map((r: any) => r.name) };
+      columns = {
+        users: colResult.map((r: any) => `${r.table_schema}.${r.column_name}`),
+        migrations: migrationsResult.map((r: any) => r.name),
+      };
     } catch (e: any) {
       dbStatus = 'disconnected';
       dbError = e?.message || String(e);

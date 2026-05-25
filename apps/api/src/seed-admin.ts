@@ -6,14 +6,29 @@ import { config } from 'dotenv';
 config({ path: '.env' });
 
 async function seedAdmin() {
-  const dataSource = new DataSource({
+  const isProduction = process.env.NODE_ENV === 'production';
+  const databaseUrl = process.env.DATABASE_URL;
+
+  const baseConfig: any = {
     type: 'postgres',
-    host: process.env.DB_HOST,
-    port: parseInt(process.env.DB_PORT || '5432'),
-    username: process.env.DB_USERNAME,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-  });
+  };
+
+  if (databaseUrl) {
+    baseConfig.url = databaseUrl;
+  } else {
+    baseConfig.host = process.env.DB_HOST;
+    baseConfig.port = parseInt(process.env.DB_PORT || '5432');
+    baseConfig.username = process.env.DB_USERNAME;
+    baseConfig.password = process.env.DB_PASSWORD;
+    baseConfig.database = process.env.DB_NAME;
+  }
+
+  if (isProduction) {
+    baseConfig.ssl = { rejectUnauthorized: false };
+    baseConfig.extra = { ssl: { rejectUnauthorized: false } };
+  }
+
+  const dataSource = new DataSource(baseConfig);
 
   await dataSource.initialize();
 

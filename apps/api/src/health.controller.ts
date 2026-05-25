@@ -12,16 +12,23 @@ export class HealthController {
   @Get()
   async check() {
     let dbStatus = 'connected';
+    let dbError: string | null = null;
+    let userCount = -1;
     try {
       await this.dataSource.query('SELECT 1');
-    } catch {
+      const result = await this.dataSource.query('SELECT COUNT(*) as count FROM "users"');
+      userCount = parseInt(result[0]?.count || '0', 10);
+    } catch (e: any) {
       dbStatus = 'disconnected';
+      dbError = e?.message || String(e);
     }
 
     return {
       status: 'ok',
       timestamp: new Date().toISOString(),
       db: dbStatus,
+      dbError,
+      userCount,
     };
   }
 }

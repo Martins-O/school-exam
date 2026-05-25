@@ -9,14 +9,14 @@ services:
     startCommand: npx typeorm migration:run -d dist/src/data-source && node dist/src/main
     healthCheckPath: /api/v1/health
     envVars:
+      - key: NODE_OPTIONS
+        value: --dns-result-order=ipv4first
       - key: NODE_ENV
         value: production
       - key: PORT
         value: 10000
       - key: DATABASE_URL
-        fromDatabase:
-          name: cbt-db
-          property: connectionString
+        sync: false
       - key: JWT_SECRET
         sync: false
       - key: JWT_EXPIRES_IN
@@ -29,9 +29,3 @@ services:
         sync: false
       - key: CLOUDINARY_API_SECRET
         sync: false
-
-databases:
-  - name: cbt-db
-    databaseName: cbt_db
-    user: cbt_user
-    plan: free

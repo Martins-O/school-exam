@@ -14,7 +14,7 @@ export class HealthController {
     let dbStatus = 'connected';
     let dbError: string | null = null;
     let userCount = -1;
-    let columns: any = null;
+    let info: any = {};
     try {
       await this.dataSource.query('SELECT 1');
       const result = await this.dataSource.query('SELECT COUNT(*) as count FROM "users"');
@@ -23,16 +23,28 @@ export class HealthController {
         'SELECT column_name, data_type, table_schema FROM information_schema.columns WHERE table_name = $1 ORDER BY table_schema, ordinal_position',
         ['users'],
       );
-      const migrationsResult = await this.dataSource.query(
-        'SELECT name FROM "migrations" ORDER BY name'
-      );
-      columns = {
-        users: colResult.map((r: any) => `${r.table_schema}.${r.column_name}`),
-        migrations: migrationsResult.map((r: any) => r.name),
-      };
+      info.userColumns = colResult.map((r: any) => `${r.table_schema}.${r.column_name}`);
     } catch (e: any) {
       dbStatus = 'disconnected';
       dbError = e?.message || String(e);
+    }
+
+    try {
+      const migrationsResult = await this.dataSource.query(
+        'SELECT name FROM "migrations" ORDER BY name'
+      );
+      info.migrations = migrationsResult.map((r: any) => r.name);
+    } catch (e: any) {
+      info.migrationsError = e?.message || String(e);
+    }
+
+    try {
+      const tablesResult = await this.dataSource.query(
+        "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE'"
+      );
+      info.tables = tablesResult.map((r: any) => r.table_name);
+    } catch (e: any) {
+      info.tablesError = e?.message || String(e);
     }
 
     return {
@@ -41,7 +53,7 @@ export class HealthController {
       db: dbStatus,
       dbError,
       userCount,
-      columns,
+      info,
     };
   }
 }

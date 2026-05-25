@@ -13,19 +13,7 @@ async function bootstrap() {
     crossOriginResourcePolicy: { policy: 'cross-origin' },
   }));
   app.enableCors({
-    origin: function (origin, callback) {
-      const allowedOrigins = [
-        process.env.FRONTEND_URL,
-        'http://localhost:3000',
-        'http://localhost:3001',
-      ].filter(Boolean);
-
-      if (!origin || allowedOrigins.some((o) => o && origin.startsWith(o.replace(/\/$/, '')))) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
+    origin: process.env.FRONTEND_URL || true,
     credentials: true,
   });
 

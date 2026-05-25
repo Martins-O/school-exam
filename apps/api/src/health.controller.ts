@@ -14,10 +14,16 @@ export class HealthController {
     let dbStatus = 'connected';
     let dbError: string | null = null;
     let userCount = -1;
+    let columns: any = null;
     try {
       await this.dataSource.query('SELECT 1');
       const result = await this.dataSource.query('SELECT COUNT(*) as count FROM "users"');
       userCount = parseInt(result[0]?.count || '0', 10);
+      const colResult = await this.dataSource.query(
+        'SELECT column_name, data_type FROM information_schema.columns WHERE table_name = $1 ORDER BY ordinal_position',
+        ['users'],
+      );
+      columns = colResult.map((r: any) => r.column_name);
     } catch (e: any) {
       dbStatus = 'disconnected';
       dbError = e?.message || String(e);
@@ -29,6 +35,7 @@ export class HealthController {
       db: dbStatus,
       dbError,
       userCount,
+      columns,
     };
   }
 }

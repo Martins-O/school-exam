@@ -49,6 +49,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
       statusCode: status,
       message,
       error,
+      details: exception instanceof Error ? exception.message : undefined,
       timestamp: new Date().toISOString(),
       path: request.url,
     });

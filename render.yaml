@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: cbt-api
+    runtime: node
+    repo: https://github.com/YOUR_USER/YOUR_REPO
+    branch: main
+    rootDir: apps/api
+    buildCommand: npm install && npm run build
+    startCommand: npx typeorm migration:run -d dist/src/data-source && node dist/src/main
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_EXPIRES_IN
+        value: 8h
+      - key: FRONTEND_URL
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false

@@ -42,11 +42,13 @@ import { HealthController } from './health.controller';
       isGlobal: true,
       envFilePath: '.env',
       validationSchema: Joi.object({
-        DB_HOST: Joi.string().required(),
-        DB_PORT: Joi.number().port().required(),
-        DB_USERNAME: Joi.string().required(),
-        DB_PASSWORD: Joi.string().required(),
-        DB_NAME: Joi.string().required(),
+        NODE_ENV: Joi.string().valid('development', 'production', 'test').default('development'),
+        DB_HOST: Joi.string().optional(),
+        DB_PORT: Joi.number().port().optional(),
+        DB_USERNAME: Joi.string().optional(),
+        DB_PASSWORD: Joi.string().optional(),
+        DB_NAME: Joi.string().optional(),
+        DATABASE_URL: Joi.string().optional(),
         JWT_SECRET: Joi.string().min(64).required(),
         FRONTEND_URL: Joi.string().uri().required(),
         CLOUDINARY_CLOUD_NAME: Joi.string().optional(),
@@ -56,18 +58,35 @@ import { HealthController } from './health.controller';
     }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        type: 'postgres',
-        host: config.get('DB_HOST'),
-        port: config.get<number>('DB_PORT'),
-        username: config.get('DB_USERNAME'),
-        password: config.get('DB_PASSWORD'),
-        database: config.get('DB_NAME'),
-        entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        migrations: [__dirname + '/migrations/*{.ts,.js}'],
-        synchronize: false,
-        logging: config.get('NODE_ENV') === 'development',
-      }),
+      useFactory: (config: ConfigService) => {
+        const isProduction = config.get('NODE_ENV') === 'production';
+        const databaseUrl = config.get('DATABASE_URL');
+
+        const baseConfig: any = {
+          type: 'postgres',
+          entities: [__dirname + '/**/*.entity{.ts,.js}'],
+          migrations: [__dirname + '/migrations/*{.ts,.js}'],
+          synchronize: false,
+          logging: !isProduction,
+        };
+
+        if (databaseUrl) {
+          baseConfig.url = databaseUrl;
+        } else {
+          baseConfig.host = config.get('DB_HOST');
+          baseConfig.port = config.get<number>('DB_PORT');
+          baseConfig.username = config.get('DB_USERNAME');
+          baseConfig.password = config.get('DB_PASSWORD');
+          baseConfig.database = config.get('DB_NAME');
+        }
+
+        if (isProduction) {
+          baseConfig.ssl = { rejectUnauthorized: false };
+          baseConfig.extra = { ssl: { rejectUnauthorized: false } };
+        }
+
+        return baseConfig;
+      },
     }),
     AuthModule,
     UsersModule,

@@ -33,20 +33,32 @@ async function seedAdmin() {
   await dataSource.initialize();
 
   const email = process.env.ADMIN_EMAIL || 'admin@cbt.com';
-  const password = process.env.ADMIN_PASSWORD || 'password123';
+  const password = process.env.ADMIN_PASSWORD;
+
+  // Skip seeding if ADMIN_PASSWORD is not set (admin already exists from a previous deploy)
+  if (!password) {
+    console.log('⏭️  Skipping admin seed — ADMIN_PASSWORD not set. Admin account unchanged.');
+    await dataSource.destroy();
+    return;
+  }
+
   const hashedPassword = await bcrypt.hash(password, 12);
 
   const result = await dataSource.query(`
     INSERT INTO "users" ("name", "email", "password", "role", "isActive")
     VALUES ('Super Admin', $1, $2, 'super_admin', true)
-    ON CONFLICT ("email") 
-    DO UPDATE SET "password" = $2, "role" = 'super_admin', "isActive" = true
+    ON CONFLICT ("email") DO NOTHING
   `, [email, hashedPassword]);
 
-  console.log('✅ Admin account created/updated');
-  console.log(`   Email: ${email}`);
-  console.log(`   Password: ${password}`);
-  console.log('   Role: super_admin');
+  const rowCount = result?.[1]?.rowCount ?? 0;
+  if (rowCount === 0) {
+    console.log('⏭️  Admin account already exists — skipping seed.');
+  } else {
+    console.log('✅ Admin account created');
+    console.log(`   Email: ${email}`);
+    console.log(`   Password: ${password}`);
+    console.log('   Role: super_admin`);
+  }
 
   await dataSource.destroy();
 }

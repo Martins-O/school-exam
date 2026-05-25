@@ -9,9 +9,23 @@ import helmet from 'helmet';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  app.use(helmet());
+  app.use(helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  }));
   app.enableCors({
-    origin: process.env.FRONTEND_URL,
+    origin: function (origin, callback) {
+      const allowedOrigins = [
+        process.env.FRONTEND_URL,
+        'http://localhost:3000',
+        'http://localhost:3001',
+      ].filter(Boolean);
+
+      if (!origin || allowedOrigins.some((o) => o && origin.startsWith(o.replace(/\/$/, '')))) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
   });
 

@@ -57,7 +57,7 @@ async function seedAdmin() {
     console.log('✅ Admin account created');
     console.log(`   Email: ${email}`);
     console.log(`   Password: ${password}`);
-    console.log('   Role: super_admin`);
+    console.log('   Role: super_admin');
   }
 
   await dataSource.destroy();

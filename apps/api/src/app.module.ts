@@ -87,7 +87,14 @@ import { HealthController } from './health.controller';
 
         if (isProduction) {
           baseConfig.ssl = { rejectUnauthorized: false };
-          baseConfig.extra = { ssl: { rejectUnauthorized: false }, family: 4 };
+          baseConfig.extra = {
+            ssl: { rejectUnauthorized: false },
+            family: 4,
+            max: 1,
+            idleTimeoutMillis: 10000,
+            connectionTimeoutMillis: 10000,
+            parameters: { pgbouncer: 'true' },
+          };
         }
 
         return baseConfig;

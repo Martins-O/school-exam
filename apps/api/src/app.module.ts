@@ -17,6 +17,7 @@ import { ClassesModule } from './classes/classes.module';
 import { CategoriesModule } from './categories/categories.module';
 import { ParentsModule } from './parents/parents.module';
 import { TranscriptsModule } from './transcripts/transcripts.module';
+import { EmailModule } from './email/email.module';
 import { GatewayModule } from './gateway/gateway.module';
 import { TeacherModule } from './teacher/teacher.module';
 import { TimetableModule } from './timetable/timetable.module';
@@ -54,6 +55,11 @@ import { HealthController } from './health.controller';
         CLOUDINARY_CLOUD_NAME: Joi.string().optional(),
         CLOUDINARY_API_KEY: Joi.string().optional(),
         CLOUDINARY_API_SECRET: Joi.string().optional(),
+        SMTP_HOST: Joi.string().optional(),
+        SMTP_PORT: Joi.number().port().optional(),
+        SMTP_USER: Joi.string().optional(),
+        SMTP_PASSWORD: Joi.string().optional(),
+        SMTP_FROM: Joi.string().optional(),
       }),
     }),
     TypeOrmModule.forRootAsync({
@@ -100,6 +106,7 @@ import { HealthController } from './health.controller';
         return baseConfig;
       },
     }),
+    EmailModule,
     AuthModule,
     UsersModule,
     ExamsModule,

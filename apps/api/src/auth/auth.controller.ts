@@ -4,6 +4,8 @@ import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { LoginDto } from './dto/login.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -21,6 +23,20 @@ export class AuthController {
     );
 
     return this.authService.login(user);
+  }
+
+  @Post('forgot-password')
+  @Throttle({ default: { limit: 3, ttl: 3600000 } })
+  async forgotPassword(@Body() dto: ForgotPasswordDto) {
+    await this.authService.requestPasswordReset(dto.email);
+    return { message: 'If an account with that email exists, a reset link has been sent.' };
+  }
+
+  @Post('reset-password')
+  @Throttle({ default: { limit: 5, ttl: 900000 } })
+  async resetPassword(@Body() dto: ResetPasswordDto) {
+    await this.authService.resetPassword(dto.token, dto.password);
+    return { message: 'Password reset successful. You can now log in with your new password.' };
   }
 
   @Get('me')

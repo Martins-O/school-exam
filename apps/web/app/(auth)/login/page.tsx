@@ -147,7 +147,7 @@ export default function LoginPage() {
                    </svg>
                  )}
                </button>
-               <Link href="#" className="absolute -bottom-6 right-2 text-[9px] font-black text-brand-gold hover:text-brand-gold-light uppercase tracking-widest transition-colors z-10">Forgot Passkey?</Link>
+                <Link href="/forgot-password" className="absolute -bottom-6 right-2 text-[9px] font-black text-brand-gold hover:text-brand-gold-light uppercase tracking-widest transition-colors z-10">Forgot Passkey?</Link>
             </div>
             
             <div className="pt-8">

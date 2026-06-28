@@ -6,7 +6,7 @@ services:
     branch: main
     rootDir: apps/api
     buildCommand: npm install && npm run build
-    startCommand: npx ts-node src/cleanup.ts && npx typeorm migration:run -d dist/src/data-source && npx ts-node src/seed-admin.ts && node dist/src/main
+    startCommand: npx typeorm migration:run -d dist/src/data-source && npx ts-node src/seed-admin.ts && node dist/src/main
     healthCheckPath: /api/v1/health
     envVars:
       - key: NODE_OPTIONS

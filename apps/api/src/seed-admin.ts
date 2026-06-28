@@ -17,7 +17,12 @@ async function seedAdmin() {
   };
 
   if (databaseUrl) {
-    baseConfig.url = databaseUrl;
+    const parsed = new URL(databaseUrl);
+    baseConfig.host = parsed.hostname;
+    baseConfig.port = parseInt(parsed.port || '5432');
+    baseConfig.username = decodeURIComponent(parsed.username);
+    baseConfig.password = decodeURIComponent(parsed.password);
+    baseConfig.database = parsed.pathname.replace('/', '');
   } else {
     baseConfig.host = process.env.DB_HOST;
     baseConfig.port = parseInt(process.env.DB_PORT || '5432');

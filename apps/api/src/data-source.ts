@@ -1,3 +1,6 @@
+import { setDefaultResultOrder } from 'dns';
+setDefaultResultOrder('ipv4first');
+
 import { DataSource } from 'typeorm';
 import { config } from 'dotenv';
 import { join } from 'path';

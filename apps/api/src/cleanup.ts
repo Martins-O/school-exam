@@ -29,7 +29,7 @@ async function cleanup() {
 
   if (process.env.NODE_ENV === 'production') {
     baseConfig.ssl = { rejectUnauthorized: false };
-    baseConfig.extra = { ssl: { rejectUnauthorized: false } };
+    baseConfig.extra = { ssl: { rejectUnauthorized: false }, family: 4 };
   }
 
   const dataSource = new DataSource(baseConfig);

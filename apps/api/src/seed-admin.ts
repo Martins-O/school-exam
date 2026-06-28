@@ -28,7 +28,7 @@ async function seedAdmin() {
 
   if (isProduction) {
     baseConfig.ssl = { rejectUnauthorized: false };
-    baseConfig.extra = { ssl: { rejectUnauthorized: false } };
+    baseConfig.extra = { ssl: { rejectUnauthorized: false }, family: 4 };
   }
 
   const dataSource = new DataSource(baseConfig);
